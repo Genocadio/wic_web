@@ -1,0 +1,33 @@
+{
+  "services": [
+    {
+      "id": "1",
+      "Name": "Service A",
+      "Description": "Description of Service A",
+      "Type": "Type 1",
+      "ImageLinks": [
+        "https://firefox-source-docs.mozilla.org/_images/debugger-tab.png"
+      ],
+      "VideoLinks": [
+        ""
+      ],
+      "showImages": true,
+      "showVideos": true,
+      "soldInUnits": true,
+      "price": 100
+    },
+    {
+      "id": "2",
+      "Name": "Service B",
+      "Description": "Description of Service B",
+      "Type": "Type 2",
+      "ImageLinks": [],
+      "VideoLinks": [
+        "https://youtu.be/RSvXtW1vHOA?si=FKS0ig9d-9TN3AYI"
+      ],
+      "showImages": true,
+      "showVideos": false,
+      "price": 200
+    }
+  ]
+}
