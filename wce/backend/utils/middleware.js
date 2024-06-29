@@ -1,7 +1,7 @@
 
 const logger = require('./logger')
 const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const User = require('../models/User')
 require('dotenv').config();
 const SECRET = process.env.SECRET
