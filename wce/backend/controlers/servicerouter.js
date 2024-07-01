@@ -25,6 +25,7 @@ Servicerouter.post('/', async (request, response) => {
       showImages: body.showImages || false,
       showVideos: body.showVideos || false,
       soldInUnits: body.soldInUnits || false,
+      locationRequired: body.locationRequired || false,
       price: body.price || 0
     });
   
@@ -57,6 +58,7 @@ Servicerouter.put('/:id', async (request, response) => {
       showImages: body.showImages,
       showVideos: body.showVideos,
       soldInUnits: body.soldInUnits,
+      locationRequired: body.locationRequired,
       price: body.price
     };
   

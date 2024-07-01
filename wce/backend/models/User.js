@@ -30,7 +30,16 @@ const userSchema = new mongoose.Schema({
   orders: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order'
-  }]
+  }],
+  dateOfCreation: {
+    type: Date,
+    default: Date.now
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive'],
+    default: 'active'
+  }
 });
 
 userSchema.set('toJSON', {

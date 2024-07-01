@@ -24,6 +24,14 @@ const orderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User' // Reference to the User model
+  },
+  location: {
+    type: String
+  // Assuming location is required for the order
+  },
+  orderDate: {
+    type: Date,
+    default: Date.now // Default to current date/time
   }
   // Add other order properties as needed
 });

@@ -76,7 +76,7 @@ usersRouter.get('/:id', async (req, res, next) => {
 // PUT /api/users/:id - Update a user by ID
 usersRouter.put('/:id', async (req, res, next) => {
     const { id } = req.params;
-    const { firstName, lastName, email, phoneNumber, location, userType, password, hasNotification, hasNotice } = req.body;
+    const { firstName, lastName, email, phoneNumber, location, userType, password, hasNotification, hasNotice, status } = req.body;
   
     try {
       // Check if user is authenticated and has admin privileges or is updating their own data
@@ -92,7 +92,7 @@ usersRouter.put('/:id', async (req, res, next) => {
 
       // Only allow updating userType if the authenticated user is an admin
       if (req.user.userType === 'admin') {
-        if(userType !== 'customer' && userType !== 'admin') {
+        if(userType && userType !== undefined && userType !== 'customer' && userType !== 'admin') {
             user.userType = 'customer'
         } else {
             user.userType = userType || user.userType;
@@ -112,6 +112,7 @@ usersRouter.put('/:id', async (req, res, next) => {
       user.location = location || user.location;
       user.hasNotification = hasNotification !== undefined ? hasNotification : user.hasNotification;
       user.hasNotice = hasNotice !== undefined ? hasNotice : user.hasNotice;
+      user.status = status !== undefined ? status : user.status;
   
       const updatedUser = await user.save();
       res.json(updatedUser);

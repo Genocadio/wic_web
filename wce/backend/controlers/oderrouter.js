@@ -7,7 +7,7 @@ const Oderrouter = express.Router();
 
 // POST /api/orders - Create a new order
 Oderrouter.post('/', async (req, res, next) => {
-  const { serviceId, quantity, notes } = req.body;
+  const { serviceId, quantity, notes, location } = req.body;
   console.log(req.user)
 
   try {
@@ -40,6 +40,7 @@ Oderrouter.post('/', async (req, res, next) => {
       totalPrice,
       notes, // Include notes in the new order
       status: 'processing', // Default status to 'processing'
+      location: location,
       user: req.user.id // Associate order with the authenticated user
     });
 
