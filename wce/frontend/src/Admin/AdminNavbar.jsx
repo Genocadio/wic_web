@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Link, useNavigate } from 'react-router-dom';
+import LogoutButton from '../Logout'; // Import the modified LogoutButton component
+import { AuthContext } from '../AuthContext'; // Import your AuthContext for user data access
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', current: false },
   { name: 'Services', href: '/manage-services', current: false },
-  { name: 'Orders', href: '/orders', current: false },
-  { name: 'Users', href: '/users', current: false },
+  { name: 'Orders', href: '/manage-orders', current: false },
+  { name: 'Users', href: '/manage-users', current: false },
 ];
 
 function classNames(...classes) {
@@ -15,17 +17,37 @@ function classNames(...classes) {
 }
 
 export default function Example({ username, onLogout }) {
+  const { loggedInUser } = useContext(AuthContext); // Assuming AuthContext provides loggedInUser
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
+  const ref = React.useRef(null); // Create a ref for the dropdown menu
 
   const handleLogout = () => {
     // Perform logout action (e.g., clear local storage, redirect)
     onLogout();
   };
 
+  const handleNavigateToAccount = () => {
+    // console.log('navigateToAccount:', loggedInUser.id)
+    navigate(`/user-details`); // Navigate to user details page
+    setShowDropdown(false); // Close the dropdown after navigation
+  };
+
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
   };
+
+  // Redirect logic based on userType
+  React.useEffect(() => {
+    if (loggedInUser && loggedInUser.userType !== 'admin') {
+      navigate('/');
+    }
+  }, [loggedInUser, navigate]);
+
+  if (!loggedInUser) {
+    // Handle case where user data is not yet loaded or user is not logged in
+    return null; // or Loading indicator, etc.
+  }
 
   return (
     <Disclosure as="nav" className="bg-slate-400">
@@ -84,7 +106,11 @@ export default function Example({ username, onLogout }) {
                 {/* Profile dropdown */}
                 <Menu as="div" className="relative ml-3">
                   <div>
-                    <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                    <MenuButton
+                      className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                      onClick={toggleDropdown}
+                      ref={ref} // Attach the ref to the MenuButton
+                    >
                       <span className="absolute -inset-1.5" />
                       <span className="sr-only">Open user menu</span>
                       <img
@@ -94,21 +120,24 @@ export default function Example({ username, onLogout }) {
                       />
                     </MenuButton>
                   </div>
-                  <MenuItems
-                    transition
-                    className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
-                  >
-                    <MenuItem>
-                      {({ focus }) => (
+                  {showDropdown && (
+                    <MenuItems
+                      transition
+                      className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
+                    >
+                      <MenuItem>
                         <button
-                          onClick={handleLogout}
-                          className={classNames(focus ? 'bg-gray-100' : '', 'block w-full text-left px-4 py-2 text-sm text-gray-700')}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full text-left"
+                          onClick={handleNavigateToAccount}
                         >
-                          Sign out
+                          Account Details
                         </button>
-                      )}
-                    </MenuItem>
-                  </MenuItems>
+                      </MenuItem>
+                      <MenuItem>
+                        <LogoutButton />
+                      </MenuItem>
+                    </MenuItems>
+                  )}
                 </Menu>
               </div>
             </div>

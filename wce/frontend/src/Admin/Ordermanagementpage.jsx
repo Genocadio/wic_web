@@ -4,6 +4,7 @@ import Getorders from '../services/Getorders';
 import getServices from '../services/getServices';
 import { format } from 'date-fns';
 import Filter from '../components/Filter';
+import AdminNavbar from './AdminNavbar'
 
 const OrderManagementPage = () => {
   const [orders, setOrders] = useState([]);
@@ -86,7 +87,7 @@ const OrderManagementPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24">
+    <><AdminNavbar /><div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24">
       <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1>
       <div className="mb-6 flex flex-col lg:flex-row items-center justify-between">
         <div className="w-full lg:w-1/4 mb-4 lg:mb-0">
@@ -134,7 +135,7 @@ const OrderManagementPage = () => {
           </tbody>
         </table>
       </div>
-    </div>
+    </div></>
   );
 };
 

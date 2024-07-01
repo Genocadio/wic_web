@@ -18,6 +18,7 @@ import ServiceDetails from './Admin/ServiceDetails.jsx';
 import OrderManagementPage from './Admin/Ordermanagementpage.jsx';
 import OrderDetailsPage from './Admin/OrderDetailsPage.jsx';
 import UserManagementPage from './Admin/UserManagementPage.jsx';
+import UserDetailsPage from './components/UserDetails.jsx';
 
 const router = createBrowserRouter([
   {
@@ -47,32 +48,36 @@ const router = createBrowserRouter([
   },
   {
     path: '/Dashboard',
-    element: <AdminDashboard />,
+    element: <ProtectedRoute element={<AdminDashboard />} />
   },
   {
     path: '/add-service',
-    element: <AddService />,
+    element: <ProtectedRoute element={<AddService />} />
 
   },
   {
     path: '/manage-services',
-    element: <ServiceManagement />,
+    element: <ProtectedRoute element={<ServiceManagement />} />
   },
   {
     path: '/manage-services/:id',
-    element: <ServiceDetails />,
+    element: <ProtectedRoute element={<ServiceDetails />}/>,
   },
   {
     path: '/manage-orders',
-    element: <OrderManagementPage />
+    element: <ProtectedRoute element={<OrderManagementPage />} />
   },
   {
     path: '/manage-orders/:orderId',
-    element: <OrderDetailsPage />
+    element: <ProtectedRoute element={<OrderDetailsPage />} />
   },
   {
     path: '/manage-users',
-    element: <UserManagementPage />
+    element: <ProtectedRoute element={<UserManagementPage />} />
+  },
+  {
+    path: '/user-details',
+    element: <ProtectedRoute element={<UserDetailsPage />} />
   }
 
 

@@ -18,9 +18,13 @@ const LoginForm = () => {
       const user = await loginService.login({ email, password });
       login(user);
       console.log('Logged in:', user);
-      // Redirect to the previous route or to a default route
-      const from = location.state?.from?.pathname || '/';
-      navigate(from);
+
+      // Redirect based on user type
+      if (user.userType === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       if (error.response && error.response.status === 401) {
         setError('Authentication failed. Please check your email and password.');

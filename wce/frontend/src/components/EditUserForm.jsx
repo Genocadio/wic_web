@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const EditUserForm = ({ user, onSave, onCancel }) => {
   const [editedUser, setEditedUser] = useState({
     password: user.password || '',
-    email: user.email,
+    email: user.email || '',
     phoneNumber: user.phoneNumber || '',
-    location: user.location,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    userType: user.userType,
+    location: user.location || '',
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    userType: user.userType || '',
   });
+
+  useEffect(() => {
+    setEditedUser({
+      password: user.password || '',
+      email: user.email || '',
+      phoneNumber: user.phoneNumber || '',
+      location: user.location || '',
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      userType: user.userType || '',
+    });
+  }, [user]);
 
   const handleChange = (e) => {
     setEditedUser({ ...editedUser, [e.target.name]: e.target.value });

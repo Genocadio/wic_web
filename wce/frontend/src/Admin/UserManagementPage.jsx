@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserService from '../services/UserService';
 import Filter from '../components/Filter';
-import EditUserForm from '../components/EditUserForm'; // Import the EditUserForm component
+import EditUserForm from '../components/EditUserForm';
+import AdminNavbar from './AdminNavbar'
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [editUserId, setEditUserId] = useState(null); // State to track which user is in edit mode
+  const [editUserId, setEditUserId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ const UserManagementPage = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching users:', error);
-        if (error.message === 'loggedInUser is null' || error.response?.status === 401) {
+        if (error.message === 'loggedInUser is null' || error.response?.status === 401 || error.response?.status === 403) {
           navigate('/login');
         } else {
           setError(error.message || 'Error fetching users');
@@ -46,15 +47,38 @@ const UserManagementPage = () => {
   }, [navigate]);
 
   const handleDeleteUser = async (userId) => {
-    try {
-      await UserService.remove(userId);
-      setUsers(users.filter(user => user.id !== userId));
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      if (error.response?.status === 401) {
-        navigate('/login');
-      } else {
-        setError(error.message || 'Error deleting user');
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await UserService.remove(userId);
+        setUsers(users.filter(user => user.id !== userId));
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          navigate('/login');
+        } else {
+          setError(error.message || 'Error deleting user');
+        }
+      }
+    }
+  };
+
+  const handleToggleUserStatus = async (userId) => {
+    const user = users.find(user => user.id === userId);
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    const action = newStatus === 'active' ? 'activate' : 'deactivate';
+
+    if (window.confirm(`Are you sure you want to ${action} this user?`)) {
+      try {
+        const updatedUser = { ...user, status: newStatus };
+        await UserService.update(userId, updatedUser);
+        setUsers(users.map(user => (user.id === userId ? updatedUser : user)));
+      } catch (error) {
+        console.error(`Error ${action}ing user:`, error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          navigate('/login');
+        } else {
+          setError(error.message || `Error ${action}ing user`);
+        }
       }
     }
   };
@@ -73,10 +97,10 @@ const UserManagementPage = () => {
 
   const handleEditUser = async (editedUser) => {
     try {
-      await UserService.update(editedUser.id, editedUser);
-      // Update local state to reflect changes
-      setUsers(users.map(user => (user.id === editedUser.id ? editedUser : user)));
-      exitEditMode(); // Exit edit mode after successful update
+      const userWithId = { ...editedUser, id: editUserId };
+      await UserService.update(userWithId.id, userWithId);
+      setUsers(users.map(user => (user.id === userWithId.id ? userWithId : user)));
+      exitEditMode();
     } catch (error) {
       console.error('Error editing user:', error);
       if (error.response?.status === 401) {
@@ -96,7 +120,7 @@ const UserManagementPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24">
+    <><AdminNavbar /><div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24">
       <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">User Management</h1>
       <div className="mb-6 flex flex-col lg:flex-row items-center justify-between">
         <div className="w-full lg:w-3/4 lg:pl-4">
@@ -123,6 +147,12 @@ const UserManagementPage = () => {
                     Edit
                   </button>
                   <button
+                    className={`${user.status === 'active' ? 'bg-yellow-500' : 'bg-green-500'} text-white py-2 px-4 rounded`}
+                    onClick={() => handleToggleUserStatus(user.id)}
+                  >
+                    {user.status === 'active' ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
                     className="bg-red-500 text-white py-2 px-4 rounded"
                     onClick={() => handleDeleteUser(user.id)}
                   >
@@ -134,7 +164,7 @@ const UserManagementPage = () => {
           </div>
         ))}
       </div>
-    </div>
+    </div></>
   );
 };
 
