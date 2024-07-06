@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import getServices from './services/getServices';
 import Filter from './components/Filter';
 import { Link } from 'react-router-dom';
+import UserNavbar from './User/UserNavbar';
+import Navbar from './components/Navbar'
 
 const Home = () => {
   const [services, setServices] = useState([]);
@@ -40,7 +42,7 @@ const Home = () => {
   }, {});
 
   return (
-    <div>
+    <><Navbar /><div>
       <h1>Home</h1>
       <Link to="/admin">Admin</Link>
       <Filter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -64,7 +66,7 @@ const Home = () => {
       ) : (
         <p>No services found matching your search criteria.</p>
       )}
-    </div>
+    </div></>
   );
 };
 

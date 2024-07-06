@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import loginService from './services/loginService';
 import { AuthContext } from './AuthContext';
+import Navbar from './components/Navbar';
 
 const RegisterForm = () => {
   const [firstName, setFirstName] = useState('');
@@ -43,7 +44,7 @@ const RegisterForm = () => {
   };
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
+    <><Navbar /><div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-lg text-center">
         <h1 className="text-2xl font-bold sm:text-3xl">Create Your Account</h1>
         <p className="mt-4 text-gray-500">
@@ -61,8 +62,7 @@ const RegisterForm = () => {
             placeholder="First Name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            required
-          />
+            required />
 
           <label htmlFor="lastName" className="sr-only">Last Name</label>
           <input
@@ -72,8 +72,7 @@ const RegisterForm = () => {
             placeholder="Last Name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            required
-          />
+            required />
 
           <label htmlFor="email" className="sr-only">Email</label>
           <input
@@ -83,8 +82,7 @@ const RegisterForm = () => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+            required />
 
           <label htmlFor="phoneNumber" className="sr-only">Phone Number</label>
           <input
@@ -93,8 +91,7 @@ const RegisterForm = () => {
             className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
             placeholder="Phone Number"
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
+            onChange={(e) => setPhoneNumber(e.target.value)} />
 
           <label htmlFor="location" className="sr-only">Location</label>
           <input
@@ -103,8 +100,7 @@ const RegisterForm = () => {
             className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
             placeholder="Location"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
+            onChange={(e) => setLocation(e.target.value)} />
 
           <label htmlFor="password" className="sr-only">Password</label>
           <input
@@ -114,8 +110,7 @@ const RegisterForm = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+            required />
         </div>
 
         {message && (
@@ -136,7 +131,7 @@ const RegisterForm = () => {
           Login here
         </Link>
       </p>
-    </div>
+    </div></>
   );
 };
 

@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import loginService from './services/loginService';
 import { AuthContext } from './AuthContext';
+import Navbar from './components/Navbar';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -36,7 +37,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
+    <><Navbar /><div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-lg text-center">
         <h1 className="text-2xl font-bold sm:text-3xl">Login to Your Account</h1>
         <p className="mt-4 text-gray-500">
@@ -55,8 +56,7 @@ const LoginForm = () => {
               placeholder="Enter email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+              required />
 
             <span className="absolute inset-y-0 end-0 grid place-content-center px-4">
               <svg
@@ -68,8 +68,7 @@ const LoginForm = () => {
                 <path
                   fillRule="evenodd"
                   d="M10 0a10 10 0 110 20 10 10 0 010-20zm0 1a9 9 0 100 18 9 9 0 000-18zm-.5 6.5a.5.5 0 00-1 0v4a.5.5 0 001 0v-4zm-.5 8.75a1.5 1.5 0 013 0h-3z"
-                  clipRule="evenodd"
-                />
+                  clipRule="evenodd" />
               </svg>
             </span>
           </div>
@@ -85,8 +84,7 @@ const LoginForm = () => {
               placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+              required />
 
             <span className="absolute inset-y-0 end-0 grid place-content-center px-4">
               <svg
@@ -98,8 +96,7 @@ const LoginForm = () => {
                 <path
                   fillRule="evenodd"
                   d="M10 0a10 10 0 110 20 10 10 0 010-20zm0 1a9 9 0 100 18 9 9 0 000-18zm-.5 6.5a.5.5 0 00-1 0v4a.5.5 0 001 0v-4zm-.5 8.75a1.5 1.5 0 013 0h-3z"
-                  clipRule="evenodd"
-                />
+                  clipRule="evenodd" />
               </svg>
             </span>
           </div>
@@ -127,7 +124,7 @@ const LoginForm = () => {
           </p>
         )}
       </form>
-    </div>
+    </div></>
   );
 };
 
