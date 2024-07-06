@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import loginService from './services/loginService';
 import { AuthContext } from './AuthContext';
-import Navbar from './components/Navbar';
+import Navbar from './User/Navbar';
 
 const RegisterForm = () => {
   const [firstName, setFirstName] = useState('');

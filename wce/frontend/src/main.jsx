@@ -19,7 +19,7 @@ import OrderManagementPage from './Admin/Ordermanagementpage.jsx';
 import OrderDetailsPage from './Admin/OrderDetailsPage.jsx';
 import UserManagementPage from './Admin/UserManagementPage.jsx';
 import UserDetailsPage from './components/UserDetails.jsx';
-import 'bootstrap/dist/css/bootstrap.min.css';
+// import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 const router = createBrowserRouter([

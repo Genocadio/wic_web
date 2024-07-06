@@ -1,71 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import getServices from './services/getServices';
-import Filter from './components/Filter';
 import { Link } from 'react-router-dom';
-import UserNavbar from './User/UserNavbar';
-import Navbar from './components/Navbar'
+import Navbar from './User/Navbar';
 
 const Home = () => {
   const [services, setServices] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeType, setActiveType] = useState(null);
 
   useEffect(() => {
-    getServices
-      .getAll()
+    // Fetch services on component mount
+    getServices.getAll()
       .then(response => {
         setServices(response);
       })
       .catch(error => console.log(error));
   }, []);
 
-  // Function to group services by type
-  const groupServicesByType = () => {
-    return services.reduce((acc, service) => {
-      const { Type } = service;
-      if (!acc[Type]) {
-        acc[Type] = [];
-      }
-      acc[Type].push(service);
-      return acc;
-    }, {});
+  // Function to handle click on service type button
+  const handleClick = (type) => {
+    setActiveType(activeType === type ? null : type);
   };
 
-  // Function to filter services by search query
-  const filteredServices = Object.keys(groupServicesByType()).reduce((acc, type) => {
-    const filteredTypeServices = groupServicesByType()[type].filter(service =>
-      service.Name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    if (filteredTypeServices.length > 0) {
-      acc[type] = filteredTypeServices;
-    }
-    return acc;
-  }, {});
-
   return (
-    <><Navbar /><div>
-      <h1>Home</h1>
-      <Link to="/admin">Admin</Link>
-      <Filter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      <h2>Services</h2>
-      {Object.keys(filteredServices).length > 0 ? (
-        Object.keys(filteredServices).map((type) => (
-          <div key={type}>
-            <h3>{type}</h3>
-            <ul>
-              {filteredServices[type].map((service) => (
-                <li key={service.id}>
-                  <Link to={`/service/${service.id}`}>
-                    <h4>{service.Name}</h4>
+    <><Navbar /><div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+      {/* About Section */}
+      <div className="max-w-4xl text-center mb-8">
+        <h1 className="text-4xl font-bold mb-4">Welcome to Our Site</h1>
+        <p className="text-lg text-gray-700">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus maximus dui a libero consequat, sed tincidunt dolor sagittis.</p>
+      </div>
+
+      {/* Service Type Buttons */}
+      <div className="flex space-x-4 mb-8">
+        {services.map(service => (
+          <div key={service.Type} className="relative group">
+            <button
+              className="bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-300"
+              onClick={() => handleClick(service.Type)}
+              onMouseEnter={() => handleClick(service.Type)}
+            >
+              {service.Type}
+            </button>
+            {activeType === service.Type && (
+              <div className="absolute left-0 right-0 bg-white rounded-lg shadow-md overflow-hidden opacity-100 mt-2 p-4 z-10">
+                {services.filter(s => s.Type === service.Type).map(filteredService => (
+                  <Link key={filteredService.id} to={`/service/${filteredService.id}`}>
+                    <div className="mb-2">
+                      <h3 className="font-semibold text-lg">{filteredService.Name}</h3>
+                      <p className="text-gray-600">{filteredService.Description}</p>
+                    </div>
                   </Link>
-                  {/* Render images and videos here if needed */}
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+            )}
           </div>
-        ))
-      ) : (
-        <p>No services found matching your search criteria.</p>
-      )}
+        ))}
+      </div>
     </div></>
   );
 };

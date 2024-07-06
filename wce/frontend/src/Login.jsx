@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import loginService from './services/loginService';
 import { AuthContext } from './AuthContext';
-import Navbar from './components/Navbar';
+import Navbar from './User/Navbar';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');

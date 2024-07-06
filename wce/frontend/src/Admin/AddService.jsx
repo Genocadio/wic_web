@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import getService from '../services/getServices'; // Adjust import path as per your project structure
+import AdminNavbar from './AdminNavbar'
 
 const AddService = () => {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ const AddService = () => {
   };
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
+    <><AdminNavbar /><div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-lg text-center">
         <h1 className="text-2xl font-bold sm:text-3xl">Add New Service</h1>
         {error && <p className="text-red-500">{error}</p>}
@@ -73,8 +74,7 @@ const AddService = () => {
             placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            required
-          />
+            required />
 
           <label htmlFor="description" className="sr-only">Description</label>
           <textarea
@@ -95,8 +95,7 @@ const AddService = () => {
             placeholder="Type"
             value={type}
             onChange={(e) => setType(e.target.value)}
-            required
-          />
+            required />
 
           <label htmlFor="imageLinks" className="sr-only">Image Links (comma-separated)</label>
           <input
@@ -105,8 +104,7 @@ const AddService = () => {
             className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
             placeholder="Image Links (comma-separated)"
             value={imageLinks}
-            onChange={(e) => setImageLinks(e.target.value)}
-          />
+            onChange={(e) => setImageLinks(e.target.value)} />
 
           <label htmlFor="videoLinks" className="sr-only">Video Links (comma-separated)</label>
           <input
@@ -115,8 +113,7 @@ const AddService = () => {
             className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
             placeholder="Video Links (comma-separated)"
             value={videoLinks}
-            onChange={(e) => setVideoLinks(e.target.value)}
-          />
+            onChange={(e) => setVideoLinks(e.target.value)} />
 
           <label htmlFor="price" className="sr-only">Price</label>
           <input
@@ -125,8 +122,7 @@ const AddService = () => {
             className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
             placeholder="Price"
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
+            onChange={(e) => setPrice(e.target.value)} />
 
           <div className="flex items-center">
             <label htmlFor="showImages" className="mr-2 text-gray-800">Show Images</label>
@@ -135,8 +131,7 @@ const AddService = () => {
               id="showImages"
               checked={showImages}
               onChange={(e) => setShowImages(e.target.checked)}
-              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4"
-            />
+              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
           </div>
 
           <div className="flex items-center">
@@ -146,8 +141,7 @@ const AddService = () => {
               id="showVideos"
               checked={showVideos}
               onChange={(e) => setShowVideos(e.target.checked)}
-              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4"
-            />
+              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
           </div>
 
           <div className="flex items-center">
@@ -157,8 +151,7 @@ const AddService = () => {
               id="soldInUnits"
               checked={soldInUnits}
               onChange={(e) => setSoldInUnits(e.target.checked)}
-              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4"
-            />
+              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
           </div>
 
           <div className="flex items-center">
@@ -168,8 +161,7 @@ const AddService = () => {
               id="locationRequired"
               checked={locationRequired}
               onChange={(e) => setLocationRequired(e.target.checked)}
-              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4"
-            />
+              className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
           </div>
         </div>
 
@@ -180,7 +172,7 @@ const AddService = () => {
           Add Service
         </button>
       </form>
-    </div>
+    </div></>
   );
 };
 
