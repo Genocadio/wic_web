@@ -50,7 +50,7 @@ const AddService = () => {
       setError(null);
 
       // Redirect to services list page or dashboard
-      navigate('/services');
+      navigate('/manage-services');
     } catch (error) {
       setError(error.message || 'Failed to add service');
       console.error('Add service error:', error);

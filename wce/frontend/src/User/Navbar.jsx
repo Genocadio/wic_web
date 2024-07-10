@@ -193,71 +193,70 @@ const Navbar = () => {
             )}
           </div>
         )}
-        {/* {isLoggedIn && (
+        {isLoggedIn && (
           <button
-            className="hidden sm:inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+            onClick={handleSidebarToggle}
+            className="inline-flex sm:hidden items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full"
           >
-            Welcome, <span className="font-bold">Username</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6"
+            >
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
           </button>
-        )} */}
-        <button
-          onClick={handleSidebarToggle}
-          className="inline-flex sm:hidden items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-6 h-6"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
+        )}
       </div>
       {isSidebarOpen && (
-        <div className="absolute z-10 left-0 top-0 h-full bg-background shadow-lg w-64">
-          <div className="p-4">
-            <h2 className="text-lg font-semibold">Menu</h2>
-            <ul className="mt-4">
-              <li>
-                <Link to="/admin/dashboard" className="block text-sm py-2 hover:bg-accent hover:text-accent-foreground">
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/services" className="block text-sm py-2 hover:bg-accent hover:text-accent-foreground">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/users" className="block text-sm py-2 hover:bg-accent hover:text-accent-foreground">
-                  Users
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/orders" className="block text-sm py-2 hover:bg-accent hover:text-accent-foreground">
-                  Orders
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/add-service" className="block text-sm py-2 hover:bg-accent hover:text-accent-foreground">
-                  Add Service
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/add-user" className="block text-sm py-2 hover:bg-accent hover:text-accent-foreground">
-                  Add User
-                </Link>
-              </li>
-            </ul>
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 z-20 sm:hidden">
+          <div className="fixed left-0 top-0 w-64 h-full bg-white z-30 flex flex-col">
+            <button
+              onClick={handleSidebarToggle}
+              className="self-end m-4 p-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-6 h-6"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            <nav className="mt-4">
+              <Link to="/" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                Home
+              </Link>
+              <Link to="/orders" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                Orders
+              </Link>
+              <Link to="#account-details" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                Account Details
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left block px-4 py-2 text-gray-800 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            </nav>
           </div>
         </div>
       )}
