@@ -1,4 +1,3 @@
-// src/components/ServiceCard.js
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link from React Router
 
@@ -19,24 +18,27 @@ const ServiceCard = ({ service, onDelete }) => {
   };
 
   return (
-    <div className="bg-white overflow-hidden shadow-sm rounded-lg w-full">
+    <div className="card bg-white text-primary-content w-full">
       {/* Use Link to navigate to service details page */}
-      <Link to={`/manage-services/${service.id}`} className="block">
-        <div className="px-3 py-2">
-          <div className="font-bold text-lg mb-1">{service.Name}</div>
-          <p className="text-gray-700 text-sm mb-1">Type: {service.Type}</p>
-          <p className="text-gray-700 text-sm mb-1">Price: {service.price}</p>
-          <p className="text-gray-700 text-sm mb-1">Sold in Units: {service.soldInUnits ? 'Yes' : 'No'}</p>
-        </div>
+      
+        <div className="card-body">
+        <Link to={`/manage-services/${service.id}`} className="block">
+          <h2 className="card-title">{service.Name}</h2>
+          <p>Type: {service.Type}</p>
+          <p>Price: {service.price}</p>
+          <p>Sold in Units: {service.soldInUnits ? 'Yes' : 'No'}</p>
       </Link>
-      <div className="px-3 py-1 flex justify-end items-center">
+
+          <div className="card-actions justify-end">
         <button
           onClick={handleDelete}
-          className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-md text-xs"
+          className="btn btn-error"
         >
           Delete
         </button>
       </div>
+        </div>
+
 
       {confirmDelete && (
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -45,13 +47,13 @@ const ServiceCard = ({ service, onDelete }) => {
             <div className="flex justify-end">
               <button
                 onClick={handleConfirmDelete}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-md text-xs mr-2"
+                className="btn btn-error mr-2"
               >
                 Yes
               </button>
               <button
                 onClick={handleCancelDelete}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1 px-2 rounded-md text-xs"
+                className="btn btn-secondary"
               >
                 No
               </button>

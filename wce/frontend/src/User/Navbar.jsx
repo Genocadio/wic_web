@@ -70,11 +70,15 @@ const Navbar = () => {
           Home
         </Link>
         {isLoggedIn && (
+          <Link to ="/user-orders">
           <button
             className="hidden sm:inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
           >
+
             Orders
+
           </button>
+          </Link>
         )}
       </div>
       {isLoggedIn && (
@@ -83,7 +87,7 @@ const Navbar = () => {
             <input
               className="flex h-10 border border-input px-3 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full rounded-md bg-muted pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               type="search"
-              placeholder="Search products..."
+              placeholder="Search services..."
               value={searchQuery}
               onChange={handleSearchChange}
             />
@@ -162,7 +166,7 @@ const Navbar = () => {
             </button>
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                <a href="#account-details" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">Account Details</a>
+                <Link className="block px-4 py-2 text-gray-800 hover:bg-gray-100" to="/user-details">Account</Link>
                 <button
                   onClick={handleLogout}
                   className="w-full text-left block px-4 py-2 text-gray-800 hover:bg-gray-100"

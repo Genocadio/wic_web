@@ -19,6 +19,7 @@ import OrderManagementPage from './Admin/Ordermanagementpage.jsx';
 import OrderDetailsPage from './Admin/OrderDetailsPage.jsx';
 import UserManagementPage from './Admin/UserManagementPage.jsx';
 import UserDetailsPage from './components/UserDetails.jsx';
+import UserOrders from './User/UserOders.jsx';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 
@@ -37,7 +38,7 @@ const router = createBrowserRouter([
     element: <ProtectedRoute element={<ServicePage />} />,
   },
   {
-    path: '/Pay',
+    path: '/Pay/:id',
     element: <ProtectedRoute element={<Oder />} />,
   },
   {
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
   {
     path: '/user-details',
     element: <ProtectedRoute element={<UserDetailsPage />} />
+  },
+  {
+    path: '/user-orders',
+    element: <ProtectedRoute element={<UserOrders />} />
   }
 
 

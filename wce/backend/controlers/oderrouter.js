@@ -7,7 +7,7 @@ const Oderrouter = express.Router();
 
 // POST /api/orders - Create a new order
 Oderrouter.post('/', async (req, res, next) => {
-  const { serviceId, quantity, notes, location } = req.body;
+  const { serviceId, quantity, notes, location, paymentMethod } = req.body;
   console.log(req.user)
 
   try {
@@ -36,12 +36,14 @@ Oderrouter.post('/', async (req, res, next) => {
     // Create a new order object
     const newOrder = new Order({
       service: serviceId,
+      serviceName: service.Name, // Include serviceName in the new order
       quantity: validQuantity,
       totalPrice,
       notes, // Include notes in the new order
       status: 'processing', // Default status to 'processing'
       location: location,
-      user: req.user.id // Associate order with the authenticated user
+      user: req.user.id, // Associate order with the authenticated user
+      paymentMethod: paymentMethod // Use the user's paymentMethod
     });
 
     // Save the new order to the database
@@ -97,7 +99,7 @@ Oderrouter.get('/:id', async (req, res, next) => {
 // PUT /api/orders/:id - Update an order by ID
 Oderrouter.put('/:id',  async (req, res, next) => {
   const { id } = req.params;
-  const { quantity, notes, status } = req.body;
+  const { quantity, notes, status, paymentMethod, serviceName  } = req.body;
 
   try {
     const order = await Order.findById(id);
@@ -110,7 +112,9 @@ Oderrouter.put('/:id',  async (req, res, next) => {
       // Update order properties
       order.quantity = quantity || order.quantity;
       order.notes = notes || order.notes;
+      order.serviceName = serviceName || order.serviceName; // Update serviceName if provided
       order.status = status || order.status; // Update status if provided
+      Order.paymentMethod = paymentMethod || order.paymentMethod;
 
       // Calculate updated totalPrice if quantity changes
       if (quantity) {

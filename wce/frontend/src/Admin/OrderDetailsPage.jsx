@@ -62,7 +62,7 @@ const OrderDetailsPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24">
+    <div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24 min-h-screen">
       <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Details</h1>
       {order && (
         <div>
@@ -74,7 +74,7 @@ const OrderDetailsPage = () => {
             <p><strong>Service Type:</strong> {order.service.Type}</p>
             <p><strong>User Email:</strong> {order.user.email}</p>
             <p><strong>Quantity:</strong> {order.quantity}</p>
-            <p><strong>Total Price:</strong> ${order.totalPrice.toFixed(2)}</p>
+            <p><strong>Total Price:</strong> {order.totalPrice.toFixed(2)}Rwf</p>
             <p><strong>Status:</strong> {order.status}</p>
           </div>
           <div className="flex space-x-4">

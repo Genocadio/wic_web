@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Getorders from '../services/Getorders';
-import getServices from '../services/getServices';
 import { format } from 'date-fns';
 import Filter from '../components/Filter';
-import AdminNavbar from './AdminNavbar'
+import AdminNavbar from './AdminNavbar';
 
 const OrderManagementPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortCriteria, setSortCriteria] = useState('orderDate'); // Default sort by order date
+  const [sortCriteria, setSortCriteria] = useState('orderDate');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [confirmDeleteOrderId, setConfirmDeleteOrderId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,24 +22,16 @@ const OrderManagementPage = () => {
         if (!loggedInUser) {
           throw new Error('loggedInUser is null');
         }
-
+  
         const token = loggedInUser.token;
         Getorders.setToken(token);
-        const ordersData = await Getorders.getAll();
-
-        // Fetch service details for each order
-        const ordersWithServiceDetails = await Promise.all(
-          ordersData.map(async (order) => {
-            const serviceDetails = await getServices.getById(order.service);
-            return {
-              ...order,
-              serviceName: serviceDetails.Name // Assuming serviceDetails has a Name property
-            };
-          })
-        );
-
-        setOrders(ordersWithServiceDetails);
-        setLoading(false);
+  
+        // Simulate loading for 5 seconds
+        setTimeout(async () => {
+          const ordersData = await Getorders.getAll();
+          setOrders(ordersData);
+          setLoading(false);
+        }, 0); // 5000 milliseconds = 5 seconds
       } catch (error) {
         if (error.message === 'loggedInUser is null' || error.response?.status === 401) {
           navigate('/login');
@@ -49,18 +42,27 @@ const OrderManagementPage = () => {
         }
       }
     };
-
+  
     fetchOrders();
   }, [navigate]);
-
+  
   const handleDeleteOrder = async (orderId) => {
+    setConfirmDeleteOrderId(orderId);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      await Getorders.remove(orderId);
-      setOrders(orders.filter(order => order.id !== orderId));
+      await Getorders.remove(confirmDeleteOrderId);
+      setOrders(orders.filter(order => order.id !== confirmDeleteOrderId));
+      setConfirmDeleteOrderId(null);
     } catch (error) {
       console.error('Error deleting order:', error);
       setError(error.message || 'Error deleting order');
     }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDeleteOrderId(null);
   };
 
   const handleSortChange = (criteria) => {
@@ -74,68 +76,131 @@ const OrderManagementPage = () => {
     setOrders(sortedOrders);
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleStatusFilterChange = (status) => {
+    setStatusFilter(status);
+  };
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter ? order.status === statusFilter : true;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Extract unique service statuses for filter options
+  const serviceStatusOptions = Array.from(new Set(orders.map(order => order.status)));
 
   if (loading) {
-    return <p>Loading orders...</p>;
+    return (
+      <>
+        <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
+          {/* <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1> */}
+          
+          <div className="overflow-x-auto lg:mx-6">
+            <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+              {/* <thead className="bg-gray-800 text-white">
+                <tr>
+                  <th className="py-3 px-4 text-left">Order Date</th>
+                  <th className="py-3 px-4 text-left">Service Name</th>
+                  <th className="py-3 px-4 text-left">User Email</th>
+                  <th className="py-3 px-4 text-left">Quantity</th>
+                  <th className="py-3 px-4 text-left">Total Price</th>
+                  <th className="py-3 px-4 text-left">Actions</th>
+                </tr>
+              </thead> */}
+              <tbody>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4">
+                      <div className="skeleton h-4 w-1/2"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </>
+    );
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return (
+      <>
+        <AdminNavbar />
+        <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
+          <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1>
+          <p>Error: {error}</p>
+        </div>
+      </>
+    );
   }
 
   return (
-    <><AdminNavbar /><div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24">
-      <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1>
-      <div className="mb-6 flex flex-col lg:flex-row items-center justify-between">
-        <div className="w-full lg:w-1/4 mb-4 lg:mb-0">
-          <label htmlFor="sortCriteria" className="block text-sm font-medium text-gray-700">Sort by:</label>
-          <select
-            id="sortCriteria"
-            className="mt-1 block w-full pl-2 pr-8 py-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            onChange={(e) => handleSortChange(e.target.value)}
-            value={sortCriteria}
-          >
-            <option value="orderDate">Order Date</option>
-            <option value="serviceName">Service Name</option>
-          </select>
+    <>
+      <AdminNavbar />
+      <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
+        <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1>
+        <div className="mb-6 flex flex-col lg:flex-row items-center justify-between">
+          {/* Sort dropdown */}
+          <div className="dropdown">
+            <div tabIndex={0} role="button" className="btn m-1">Sort by:</div>
+            <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+              <li><button className="dropdown-item" onClick={() => handleSortChange('orderDate')}>Order Date</button></li>
+              <li><button className="dropdown-item" onClick={() => handleSortChange('serviceName')}>Service Name</button></li>
+            </ul>
+          </div>
+
+          {/* Status filter dropdown */}
+          <div className="dropdown">
+            <div tabIndex={0} role="button" className="btn m-1">Filter by Status:</div>
+            <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+              <li><button className="dropdown-item" onClick={() => handleStatusFilterChange('')}>All</button></li>
+              {serviceStatusOptions.map((status, index) => (
+                <li key={index}><button className="dropdown-item" onClick={() => handleStatusFilterChange(status)}>{status}</button></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="w-full lg:w-3/4 lg:pl-4 flex justify-center">
+            <Filter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          </div>
         </div>
-        <div className="w-full lg:w-3/4 lg:pl-4">
-          <Filter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        </div>
-      </div>
-      <div className="overflow-x-auto lg:mx-6">
-        <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
-          <thead className="bg-gray-800 text-white">
-            <tr>
-              <th className="py-3 px-4 text-left">Order Date</th>
-              <th className="py-3 px-4 text-left">Service Name</th>
-              <th className="py-3 px-4 text-left">User Email</th>
-              <th className="py-3 px-4 text-left">Quantity</th>
-              <th className="py-3 px-4 text-left">Total Price</th>
-              <th className="py-3 px-4 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.map((order, index) => (
-              <tr key={index} className="even:bg-gray-50">
-                <td className="py-2 px-4">{format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm')}</td>
-                <td className="py-2 px-4">{order.serviceName}</td>
-                <td className="py-2 px-4">{order.user.email}</td>
-                <td className="py-2 px-4">{order.quantity}</td>
-                <td className="py-2 px-4">${order.totalPrice.toFixed(2)}</td>
-                <td className="py-2 px-4">
-                  <button onClick={() => navigate(`/manage-orders/${order.id}`)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
-                  <button onClick={() => handleDeleteOrder(order.id)} className="text-red-600 hover:text-red-900 ml-4">Delete</button>
-                </td>
+        <div className="overflow-x-auto lg:mx-6">
+          <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+            <thead className="bg-gray-800 text-white">
+              <tr>
+                <th className="py-3 px-4 text-left">Order Date</th>
+                <th className="py-3 px-4 text-left">Service Name</th>
+                <th className="py-3 px-4 text-left">User Email</th>
+                <th className="py-3 px-4 text-left">Quantity</th>
+                <th className="py-3 px-4 text-left">Total Price</th>
+                <th className="py-3 px-4 text-left">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredOrders.map((order, index) => (
+                <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                  <td className="py-2 px-4">{format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm')}</td>
+                  <td className="py-2 px-4">{order.serviceName}</td>
+                  <td className="py-2 px-4">{order.user.email}</td>
+                  <td className="py-2 px-4">{order.quantity}</td>
+                  <td className="py-2 px-4">{order.totalPrice.toFixed(2)} Rwf</td>
+                  <td className="py-2 px-4">
+                    <button onClick={() => navigate(`/manage-orders/${order.id}`)} className="btn btn-sm btn-primary mr-2">Edit</button>
+                    <button onClick={() => handleDeleteOrder(order.id)} className="btn btn-sm btn-error">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div></>
+    </>
   );
 };
 

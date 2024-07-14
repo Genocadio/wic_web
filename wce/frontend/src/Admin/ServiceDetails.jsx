@@ -77,7 +77,7 @@ const ServiceDetails = () => {
   if (!service) return <p>Loading...</p>;
 
   return (
-    <><AdminNavbar /><div className="flex justify-center items-center h-screen">
+    <><AdminNavbar /><div className="flex justify-center  min-h-screen">
       <div className="max-w-xl w-full p-6 bg-white rounded-lg shadow-md mt-16">
         <h2 className="text-2xl font-bold mb-4 text-center">Service Details</h2>
         {error && <p className="text-red-500">{error}</p>}

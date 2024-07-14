@@ -1,0 +1,4 @@
+/* ServicePage.css */
+.transition-opacity {
+  transition: opacity 0.5s ease-in-out;
+}

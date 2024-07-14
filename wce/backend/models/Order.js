@@ -6,6 +6,10 @@ const orderSchema = new mongoose.Schema({
     ref: 'Service', // Reference to the Service model
     required: true
   },
+  serviceName: {
+    type: String,
+    required: true
+  },
   quantity: {
     type: Number,
     default: 1
@@ -32,7 +36,12 @@ const orderSchema = new mongoose.Schema({
   orderDate: {
     type: Date,
     default: Date.now // Default to current date/time
-  }
+  },
+  paymentMethod: {
+    type: String,
+    defaul: 'MOMO'
+  },
+
   // Add other order properties as needed
 });
 
