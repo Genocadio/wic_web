@@ -7,9 +7,10 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const LoginForm = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Single input for email or phone number
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
   const { login, loggedInUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -26,7 +27,7 @@ const LoginForm = () => {
     setError(null); // Clear previous errors
 
     try {
-      const user = await loginService.login({ email, password });
+      const user = await loginService.login({ identifier, password });
       login(user);
       console.log('Logged in:', user);
       toast.success(`Welcome back, ${user.firstName}!`);
@@ -39,8 +40,8 @@ const LoginForm = () => {
       }
     } catch (error) {
       if (error.response && error.response.status === 401) {
-        setError('Authentication failed. Please check your email and password.');
-        toast.error('Authentication failed. Please check your email and password.');
+        setError('Authentication failed. Please check your credentials.');
+        toast.error('Authentication failed. Please check your credentials.');
       } else {
         setError(error.message || 'Login failed'); // Fallback to generic error message
         toast.error(error.message || 'Login failed');
@@ -62,17 +63,16 @@ const LoginForm = () => {
 
         <form onSubmit={handleLogin} className="mx-auto mb-0 mt-8 max-w-md space-y-4">
           <div>
-            <label htmlFor="email" className="sr-only">Email</label>
-
+            <label htmlFor="identifier" className="sr-only">Email or Phone Number</label>
             <div className="relative">
               <input
-                type="email"
+                type="text"
                 className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required />
-
+                placeholder="Enter email or phone number"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                required
+              />
               <span className="absolute inset-y-0 end-0 grid place-content-center px-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +83,8 @@ const LoginForm = () => {
                   <path
                     fillRule="evenodd"
                     d="M10 0a10 10 0 110 20 10 10 0 010-20zm0 1a9 9 0 100 18 9 9 0 000-18zm-.5 6.5a.5.5 0 00-1 0v4a.5.5 0 001 0v-4zm-.5 8.75a1.5 1.5 0 013 0h-3z"
-                    clipRule="evenodd" />
+                    clipRule="evenodd"
+                  />
                 </svg>
               </span>
             </div>
@@ -91,28 +92,38 @@ const LoginForm = () => {
 
           <div>
             <label htmlFor="password" className="sr-only">Password</label>
-
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'} // Toggle input type based on showPassword state
                 className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
                 placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required />
-
-              <span className="absolute inset-y-0 end-0 grid place-content-center px-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-gray-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 0a10 10 0 110 20 10 10 0 010-20zm0 1a9 9 0 100 18 9 9 0 000-18zm-.5 6.5a.5.5 0 00-1 0v4a.5.5 0 001 0v-4zm-.5 8.75a1.5 1.5 0 013 0h-3z"
-                    clipRule="evenodd" />
-                </svg>
+                required
+              />
+              <span 
+                className="absolute inset-y-0 end-0 grid place-content-center px-4 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)} // Toggle showPassword state
+              >
+                {!showPassword ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-gray-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M10 3C5 3 1.73 6.11.84 10.03c-.13.62.39 1.22 1.03 1.22.46 0 .87-.31.98-.76C3.1 8.67 6.29 6 10 6s6.9 2.67 7.15 6.49c.11.45.52.76.98.76.64 0 1.16-.6 1.03-1.22C18.27 6.11 15 3 10 3zM10 7c-2.21 0-4 1.79-4 4 0 1.49.81 2.77 2 3.44V16h4v-1.56c1.19-.67 2-1.95 2-3.44 0-2.21-1.79-4-4-4zm0 2c1.1 0 2 .9 2 2 0 .35-.07.68-.18.99L10 10.66l-1.82 1.33C8.07 11.68 8 11.35 8 11c0-1.1.9-2 2-2z"/>
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-gray-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+                  </svg>
+                )}
               </span>
             </div>
           </div>
@@ -133,13 +144,14 @@ const LoginForm = () => {
             </button>
           </div>
 
-          {/* {error && (
+          {error && (
             <p className="text-red-500 text-sm">
               {error}
             </p>
-          )} */}
+          )}
         </form>
       </div>
+      <ToastContainer />
     </>
   );
 };

@@ -99,6 +99,17 @@ const AdminDashboard = () => {
               Manage Messages
             </button>
           </div>
+          {/* Export Data Box */}
+          <div className="p-6 bg-white rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold mb-2">Data</h2>
+            <p className="text-gray-700 mb-4">Manage data</p>
+            <button
+              className="w-full p-3 bg-blue-500 text-white font-bold rounded-lg shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              onClick={() => handleNavigation('/data-export')}
+            >
+              Data
+            </button>
+          </div>
         </div>
       </div>
     </>

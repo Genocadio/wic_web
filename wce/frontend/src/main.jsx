@@ -25,6 +25,7 @@ import UserOrders from './User/UserOders.jsx';
 import AdminNoticesPage from './Admin/AdminNoticePage.jsx';
 import AdminMessagesPage from './Admin/AdminMessagesPage.jsx';
 import UserMessagesPage from './User/UserMessagesPage.jsx';
+import DataExportPage from './Admin/DataExportPage.jsx';
 
 const router = createBrowserRouter([
   {
@@ -99,6 +100,10 @@ const router = createBrowserRouter([
   {
     path: '/user-messages',
     element: <ProtectedRoute element={<UserMessagesPage />} />
+  },
+  {
+    path: '/data-export',
+    element: <ProtectedRoute element={<DataExportPage />} />
   }
 ]);
 

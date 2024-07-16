@@ -1,4 +1,3 @@
-// src/components/NoticeForm.js
 import React, { useState, useEffect } from 'react';
 import noticesService from '../services/noticesService';
 import UserService from '../services/UserService';
@@ -14,28 +13,31 @@ const NoticeForm = ({ onNoticeCreated }) => {
   const [filteredUsers, setFilteredUsers] = useState([]);
 
   useEffect(() => {
-    const loggedInUser = JSON.parse(window.localStorage.getItem('loggedInUser'));
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     if (loggedInUser && loggedInUser.id) {
       setPublishedBy(loggedInUser.id);
+      
+      const fetchUsers = async () => {
+        try {
+          UserService.setToken(loggedInUser.token);
+          const fetchedUsers = await UserService.getAll();
+          setUsers(fetchedUsers);
+        } catch (error) {
+          console.error('Error fetching users:', error);
+        }
+      };
+
+      fetchUsers();
     }
-
-    const fetchUsers = async () => {
-      try {
-        UserService.setToken(loggedInUser.token);
-        const users = await UserService.getAll();
-        console.log(users)
-        setUsers(users);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    };
-
-    fetchUsers();
   }, []);
 
   useEffect(() => {
     setFilteredUsers(
-      users.filter((user) => user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+      users.filter((user) =>
+        (user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.phoneNumber.includes(searchQuery)) &&
+        searchQuery.trim() !== ''
+      ).slice(0, 3)
     );
   }, [searchQuery, users]);
 
@@ -101,7 +103,7 @@ const NoticeForm = ({ onNoticeCreated }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by email"
+            placeholder="Search by email or phone number"
             className="w-full input input-bordered"
           />
           {searchQuery && (
@@ -112,7 +114,7 @@ const NoticeForm = ({ onNoticeCreated }) => {
                   className="cursor-pointer p-2 bg-gray-100 rounded hover:bg-gray-200"
                   onClick={() => {
                     setTargetUser(user.id);
-                    setSearchQuery(user.email);
+                    setSearchQuery(user.email); // Set searchQuery to user's email when selected
                   }}
                 >
                   {user.email}
