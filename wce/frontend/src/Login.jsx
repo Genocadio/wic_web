@@ -1,8 +1,10 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import loginService from './services/loginService';
 import { AuthContext } from './AuthContext';
 import Navbar from './User/Navbar';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -10,7 +12,6 @@ const LoginForm = () => {
   const [error, setError] = useState(null);
   const { login, loggedInUser, logout } = useContext(AuthContext);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     // Redirect to home if user is already logged in
@@ -23,10 +24,12 @@ const LoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null); // Clear previous errors
+
     try {
       const user = await loginService.login({ email, password });
       login(user);
       console.log('Logged in:', user);
+      toast.success(`Welcome back, ${user.firstName}!`);
 
       // Redirect based on user type
       if (user.userType === 'admin') {
@@ -37,10 +40,12 @@ const LoginForm = () => {
     } catch (error) {
       if (error.response && error.response.status === 401) {
         setError('Authentication failed. Please check your email and password.');
+        toast.error('Authentication failed. Please check your email and password.');
       } else {
         setError(error.message || 'Login failed'); // Fallback to generic error message
+        toast.error(error.message || 'Login failed');
       }
-      console.error('Login error:', error);
+      // console.error('Login error:', error);
     }
   };
 
@@ -128,11 +133,11 @@ const LoginForm = () => {
             </button>
           </div>
 
-          {error && (
+          {/* {error && (
             <p className="text-red-500 text-sm">
               {error}
             </p>
-          )}
+          )} */}
         </form>
       </div>
     </>

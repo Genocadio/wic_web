@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Getorders from '../services/Getorders';
 import { format } from 'date-fns';
+import {toast} from 'react-toastify'
 
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
@@ -43,6 +44,7 @@ const OrderDetailsPage = () => {
       const updatedOrder = { ...order, status: newStatus };
       await Getorders.update(order.id, { status: newStatus });
       setOrder((prevOrder) => ({ ...prevOrder, status: newStatus }));
+      toast.success(`Order updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating order status:', error);
       if (error.response?.status === 401) {

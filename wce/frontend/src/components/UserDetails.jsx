@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import UserService from '../services/UserService'; // Import UserService module
 import AdminNavbar from '../Admin/AdminNavbar';
+import { toast } from 'react-toastify';
+import MessageForm from '../User/MessageForm';
 
 const UserDetails = () => {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -18,6 +20,7 @@ const UserDetails = () => {
     newPassword: '',
     confirmPassword: '',
   });
+  const [showMessageForm, setShowMessageForm] = useState(false); // State for toggling message form
 
   useEffect(() => {
     // Fetch logged-in user from localStorage
@@ -69,6 +72,16 @@ const UserDetails = () => {
     });
   };
 
+  const isValidPassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasDigit = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  
+    return password.length >= minLength && hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
+  };
+
   const handleEditSave = async () => {
     try {
       if (loggedInUser) {
@@ -77,6 +90,7 @@ const UserDetails = () => {
         const updatedUser = await UserService.update(loggedInUser.id, formData); // Using UserService to update user details
         setUser(updatedUser); // Update the user state with updated details
         setEditMode(false);
+        toast.success('Updated your user information');
         // Optionally show success message or update state
       }
     } catch (error) {
@@ -87,24 +101,40 @@ const UserDetails = () => {
 
   const handleChangePassword = async () => {
     try {
-      if (loggedInUser) {
-        if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
-          // Passwords do not match, handle this case (e.g., show error message)
-          console.error('Passwords do not match');
-          return;
-        }
-
-        // Ensure token is set before updating user password
-        UserService.setToken(loggedInUser.token);
-        const updatedUser = await UserService.update(loggedInUser.id, { password: passwordFormData.newPassword }); // Using UserService to update password
-        setUser(updatedUser); // Update the user state with updated details
-        setEditPasswordMode(false);
-        // Optionally show success message or update state
+      if (!loggedInUser) {
+        return; // Handle case where user is not logged in
       }
+
+      const { newPassword, confirmPassword } = passwordFormData;
+
+      // Check if passwords match
+      if (newPassword !== confirmPassword) {
+        toast.error('Passwords do not match.');
+        return;
+      }
+
+      // Check if password meets criteria
+      if (!isValidPassword(newPassword)) {
+        toast.error('Password does not meet criteria.');
+        return;
+      }
+
+      // Ensure token is set before updating user password
+      UserService.setToken(loggedInUser.token);
+      const updatedUser = await UserService.update(loggedInUser.id, { password: newPassword });
+      setUser(updatedUser);
+      toast.success('Password updated successfully.');
+      setEditPasswordMode(false);
     } catch (error) {
       console.error('Error updating password:', error);
       // Handle error updating password
+      toast.error('Error updating password. Please try again.');
     }
+  };
+
+  const handleMessageCreated = (newMessage) => {
+    // toast.success('Message created successfully!');
+    setShowMessageForm(false); // Hide message form after creating a message
   };
 
   if (loading) {
@@ -150,6 +180,12 @@ const UserDetails = () => {
                 onClick={() => setEditPasswordMode(true)}
               >
                 Change Password
+              </button>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                onClick={() => setShowMessageForm(true)}
+              >
+                Create Message
               </button>
             </div>
           </div>
@@ -220,7 +256,7 @@ const UserDetails = () => {
                 />
               </label>
             </div>
-            {/* Add more fields as needed */}
+            {/* Add more editable fields as needed */}
             <div className="space-x-4">
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
@@ -238,7 +274,8 @@ const UserDetails = () => {
           </div>
         )}
         {editPasswordMode && (
-          <div className="space-y-4 mt-4">
+          <div className="mt-4 space-y-4">
+            <h2 className="text-xl font-bold mb-2">Change Password</h2>
             <div>
               <label htmlFor="newPassword" className="block">
                 New Password:
@@ -279,6 +316,17 @@ const UserDetails = () => {
                 Cancel
               </button>
             </div>
+          </div>
+        )}
+        {showMessageForm && (
+          <div className="mt-4">
+            <MessageForm onMessageCreated={handleMessageCreated} />
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2"
+              onClick={() => setShowMessageForm(false)}
+            >
+              Cancel
+            </button>
           </div>
         )}
       </div>

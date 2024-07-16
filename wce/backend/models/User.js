@@ -31,6 +31,14 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order'
   }],
+  notices: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Notice'
+  }],
+  messages: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message'
+  }],
   dateOfCreation: {
     type: Date,
     default: Date.now

@@ -1,9 +1,10 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Link, useNavigate } from 'react-router-dom';
-import LogoutButton from '../Logout'; // Import the modified LogoutButton component
-import { AuthContext } from '../AuthContext'; // Import your AuthContext for user data access
+import LogoutButton from '../Logout';
+import { AuthContext } from '../AuthContext';
+import messagesService from '../services/messagesService';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', current: false },
@@ -17,27 +18,42 @@ function classNames(...classes) {
 }
 
 export default function Example({ username, onLogout }) {
-  const { loggedInUser } = useContext(AuthContext); // Assuming AuthContext provides loggedInUser
+  const { loggedInUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const ref = React.useRef(null); // Create a ref for the dropdown menu
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const ref = React.useRef(null);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const messages = await messagesService.getAll();
+        const unreadMessages = messages.filter(
+          (message) => message.status === 'pending' && (!message.viewedBy || message.viewedBy.length === 0)
+        );
+        setHasUnreadMessages(unreadMessages.length > 0);
+        // console.log('Unread messages:', unreadMessages, messages);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
+
+    fetchMessages();
+  }, []);
 
   const handleLogout = () => {
-    // Perform logout action (e.g., clear local storage, redirect)
     onLogout();
   };
 
   const handleNavigateToAccount = () => {
-    // console.log('navigateToAccount:', loggedInUser.id)
-    navigate(`/user-details`); // Navigate to user details page
-    setShowDropdown(false); // Close the dropdown after navigation
+    navigate(`/user-details`);
+    setShowDropdown(false);
   };
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
   };
 
-  // Redirect logic based on userType
   React.useEffect(() => {
     if (loggedInUser && loggedInUser.userType !== 'admin') {
       navigate('/');
@@ -45,8 +61,7 @@ export default function Example({ username, onLogout }) {
   }, [loggedInUser, navigate]);
 
   if (!loggedInUser) {
-    // Handle case where user data is not yet loaded or user is not logged in
-    return null; // or Loading indicator, etc.
+    return null;
   }
 
   return (
@@ -56,7 +71,6 @@ export default function Example({ username, onLogout }) {
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
             <div className="relative flex h-16 items-center justify-between">
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-                {/* Mobile menu button */}
                 <DisclosureButton className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-900 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="absolute -inset-0.5" />
                   <span className="sr-only">Open main menu</span>
@@ -70,11 +84,11 @@ export default function Example({ username, onLogout }) {
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex flex-shrink-0 items-center">
                   <Link to="/">
-                  <img
-                    className="h-8 w-auto"
-                    src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                    alt="Your Company"
-                  />
+                    <img
+                      className="h-8 w-auto"
+                      src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                      alt="Your Company"
+                    />
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:block">
@@ -96,22 +110,24 @@ export default function Example({ username, onLogout }) {
                 </div>
               </div>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                <button
-                  type="button"
-                  className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                >
-                  <span className="absolute -inset-1.5" />
-                  <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" aria-hidden="true" />
-                </button>
-
-                {/* Profile dropdown */}
+                {hasUnreadMessages && (
+                  <Link to='/messages'>
+                    <button
+                      type="button"
+                      className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                    >
+                      <span className="absolute -inset-1.5" />
+                      <span className="sr-only">View notifications</span>
+                      <BellIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
+                  </Link>
+                )}
                 <Menu as="div" className="relative ml-3">
                   <div>
                     <MenuButton
                       className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                       onClick={toggleDropdown}
-                      ref={ref} // Attach the ref to the MenuButton
+                      ref={ref}
                     >
                       <span className="absolute -inset-1.5" />
                       <span className="sr-only">Open user menu</span>

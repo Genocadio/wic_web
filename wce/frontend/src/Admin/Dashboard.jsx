@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminNavbar from './AdminNavbar';
+import Toast from '../components/Toast';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const AdminDashboard = () => {
   return (
     <>
       <AdminNavbar />
+      <Toast />
       <div className="min-h-screen bg-gray-100 bg-opacity-50 flex items-center justify-center">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Manage Services Box */}
@@ -71,6 +73,30 @@ const AdminDashboard = () => {
               onClick={() => handleNavigation('/add-service')}
             >
               Add Service
+            </button>
+          </div>
+
+          {/* Manage Notifications Box */}
+          <div className="p-6 bg-white rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold mb-2">Manage Notifications</h2>
+            <p className="text-gray-700 mb-4">View and manage all notifications.</p>
+            <button
+              className="w-full p-3 bg-blue-500 text-white font-bold rounded-lg shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              onClick={() => handleNavigation('/notices')}
+            >
+              Manage Notifications
+            </button>
+          </div>
+
+          {/* Manage Messages Box */}
+          <div className="p-6 bg-white rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold mb-2">Manage Messages</h2>
+            <p className="text-gray-700 mb-4">View and manage all messages.</p>
+            <button
+              className="w-full p-3 bg-blue-500 text-white font-bold rounded-lg shadow-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              onClick={() => handleNavigation('/messages')}
+            >
+              Manage Messages
             </button>
           </div>
         </div>

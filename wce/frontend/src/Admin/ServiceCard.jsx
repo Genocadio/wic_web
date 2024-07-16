@@ -18,7 +18,7 @@ const ServiceCard = ({ service, onDelete }) => {
   };
 
   return (
-    <div className="card bg-white text-primary-content w-full">
+    <div className="card  shadow-xl bg-base-200 text-primary-content w-full">
       {/* Use Link to navigate to service details page */}
       
         <div className="card-body">

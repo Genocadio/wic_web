@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Getorders from '../services/Getorders';
 import { format } from 'date-fns';
 import Filter from '../components/Filter';
@@ -26,12 +28,9 @@ const OrderManagementPage = () => {
         const token = loggedInUser.token;
         Getorders.setToken(token);
   
-        // Simulate loading for 5 seconds
-        setTimeout(async () => {
-          const ordersData = await Getorders.getAll();
-          setOrders(ordersData);
-          setLoading(false);
-        }, 0); // 5000 milliseconds = 5 seconds
+        const ordersData = await Getorders.getAll();
+        setOrders(ordersData);
+        setLoading(false);
       } catch (error) {
         if (error.message === 'loggedInUser is null' || error.response?.status === 401) {
           navigate('/login');
@@ -53,11 +52,14 @@ const OrderManagementPage = () => {
   const handleConfirmDelete = async () => {
     try {
       await Getorders.remove(confirmDeleteOrderId);
+      toast.success('Order deleted successfully');
       setOrders(orders.filter(order => order.id !== confirmDeleteOrderId));
+    
       setConfirmDeleteOrderId(null);
     } catch (error) {
       console.error('Error deleting order:', error);
       setError(error.message || 'Error deleting order');
+      toast.error('Error deleting order');
     }
   };
 
@@ -86,27 +88,14 @@ const OrderManagementPage = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Extract unique service statuses for filter options
   const serviceStatusOptions = Array.from(new Set(orders.map(order => order.status)));
 
   if (loading) {
     return (
       <>
         <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
-          {/* <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1> */}
-          
           <div className="overflow-x-auto lg:mx-6">
             <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
-              {/* <thead className="bg-gray-800 text-white">
-                <tr>
-                  <th className="py-3 px-4 text-left">Order Date</th>
-                  <th className="py-3 px-4 text-left">Service Name</th>
-                  <th className="py-3 px-4 text-left">User Email</th>
-                  <th className="py-3 px-4 text-left">Quantity</th>
-                  <th className="py-3 px-4 text-left">Total Price</th>
-                  <th className="py-3 px-4 text-left">Actions</th>
-                </tr>
-              </thead> */}
               <tbody>
                 {Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
@@ -146,7 +135,6 @@ const OrderManagementPage = () => {
       <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
         <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1>
         <div className="mb-6 flex flex-col lg:flex-row items-center justify-between">
-          {/* Sort dropdown */}
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn m-1">Sort by:</div>
             <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
@@ -155,7 +143,6 @@ const OrderManagementPage = () => {
             </ul>
           </div>
 
-          {/* Status filter dropdown */}
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn m-1">Filter by Status:</div>
             <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
@@ -200,6 +187,18 @@ const OrderManagementPage = () => {
           </table>
         </div>
       </div>
+      {confirmDeleteOrderId && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-black bg-opacity-50 absolute inset-0"></div>
+          <div className="bg-white p-6 rounded shadow-lg z-10">
+            <p>Are you sure you want to delete this order?</p>
+            <div className="flex justify-end mt-4">
+              <button onClick={handleCancelDelete} className="btn btn-sm btn-primary mr-2">Cancel</button>
+              <button onClick={handleConfirmDelete} className="btn btn-sm btn-error">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -1,7 +1,9 @@
 import React from 'react';
 import './index.css';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client'; // Import createRoot from react-dom/client
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify'; // Import ToastContainer
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 import App from './App.jsx';
 import Home from './Home.jsx';
 import ServicePage from './Service.jsx';
@@ -20,8 +22,9 @@ import OrderDetailsPage from './Admin/OrderDetailsPage.jsx';
 import UserManagementPage from './Admin/UserManagementPage.jsx';
 import UserDetailsPage from './components/UserDetails.jsx';
 import UserOrders from './User/UserOders.jsx';
-// import 'bootstrap/dist/css/bootstrap.min.css';
-
+import AdminNoticesPage from './Admin/AdminNoticePage.jsx';
+import AdminMessagesPage from './Admin/AdminMessagesPage.jsx';
+import UserMessagesPage from './User/UserMessagesPage.jsx';
 
 const router = createBrowserRouter([
   {
@@ -56,7 +59,6 @@ const router = createBrowserRouter([
   {
     path: '/add-service',
     element: <ProtectedRoute element={<AddService />} />
-
   },
   {
     path: '/manage-services',
@@ -64,7 +66,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/manage-services/:id',
-    element: <ProtectedRoute element={<ServiceDetails />}/>,
+    element: <ProtectedRoute element={<ServiceDetails />} />,
   },
   {
     path: '/manage-orders',
@@ -85,15 +87,26 @@ const router = createBrowserRouter([
   {
     path: '/user-orders',
     element: <ProtectedRoute element={<UserOrders />} />
+  },
+  {
+    path: '/notices',
+    element: <ProtectedRoute element={<AdminNoticesPage />} />
+  },
+  {
+    path: '/messages',
+    element: <ProtectedRoute element={<AdminMessagesPage />} />
+  },
+  {
+    path: '/user-messages',
+    element: <ProtectedRoute element={<UserMessagesPage />} />
   }
-
-
 ]);
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <RouterProvider router={router} />
+      <ToastContainer position="top-center" autoClose={3000} />
     </AuthProvider>
   </React.StrictMode>,
 );

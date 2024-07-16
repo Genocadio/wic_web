@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from './User/Navbar';
 import getServices from './services/getServices';
 import Getorders from './services/Getorders'; // Import orderServices module
+import { toast } from 'react-toastify';
 import 'daisyui/dist/full.css';
 
 const OrderPage = () => {
@@ -53,7 +54,8 @@ const OrderPage = () => {
 
       // Call the create function from orderServices to post the order
       await Getorders.create(newOrder);
-      alert('Order placed successfully!'); // Example of notifying the user
+      toast.success('Order placed successfully!'); // Example of notifying the user
+      // alert('Order placed successfully!'); // Example of notifying the user
 
       // Optional: Redirect the user to another page after successful order placement
       // navigate('/orders'); // Make sure to import useNavigate from react-router-dom

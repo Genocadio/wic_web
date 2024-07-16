@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import loginService from './services/loginService';
 import { AuthContext } from './AuthContext';
+import { toast } from 'react-toastify';
 import Navbar from './User/Navbar';
 
 const RegisterForm = () => {
@@ -32,9 +33,11 @@ const RegisterForm = () => {
 
     try {
       const user = await loginService.register({ firstName, lastName, email, phoneNumber, location, password });
+      
+
 
       setMessage(loggedInUser ? 'User created successfully.' : 'Thanks for registering. Please login to continue.');
-      
+      toast.success('user registered')
       if (!loggedInUser) {
         navigate('/login');
       }
@@ -112,10 +115,6 @@ const RegisterForm = () => {
             onChange={(e) => setPassword(e.target.value)}
             required />
         </div>
-
-        {message && (
-          <p className="text-green-500 text-sm">{message}</p>
-        )}
 
         <button
           type="submit"
