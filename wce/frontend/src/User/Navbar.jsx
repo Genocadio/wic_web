@@ -341,7 +341,7 @@ const Navbar = () => {
                 Orders
               </Link>
             )}
-            {isLoggedIn && (
+            {notificationsExist && isLoggedIn && (
               <button
                 onClick={handleNotificationsClick}
                 className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
@@ -349,7 +349,7 @@ const Navbar = () => {
                 Notifications
               </button>
             )}
-            {isLoggedIn && (
+            {messagesExist && isLoggedIn &&  (
               <button
                 onClick={handleMessagesClick}
                 className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
@@ -360,7 +360,7 @@ const Navbar = () => {
             {isLoggedIn ? (
               <>
                 <Link
-                  to="/user-account"
+                  to="/user-details"
                   className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
                   onClick={() => setIsSidebarOpen(false)}
                 >
