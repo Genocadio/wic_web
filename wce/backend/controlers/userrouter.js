@@ -11,7 +11,7 @@ const usersRouter = express.Router();
 usersRouter.post('/', async (req, res, next) => {
     const { firstName, lastName, email, phoneNumber, location, password } = req.body;
   
-    if (!email  || !password) {
+    if (!phoneNumber  || !password) {
       return res.status(400).json({ error: 'First name, last name, email, phone number, location, and password are required' });
     }
   

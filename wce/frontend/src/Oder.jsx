@@ -55,7 +55,6 @@ const OrderPage = () => {
       // Call the create function from orderServices to post the order
       await Getorders.create(newOrder);
       toast.success('Order placed successfully!'); // Example of notifying the user
-      // alert('Order placed successfully!'); // Example of notifying the user
 
       // Optional: Redirect the user to another page after successful order placement
       // navigate('/orders'); // Make sure to import useNavigate from react-router-dom
@@ -100,26 +99,30 @@ const OrderPage = () => {
                 <div className="rounded-box bg-base-200 h-full p-4">
                   <div className="form-control">
                     <label className="label">Total Price</label>
-                    <p className="">{`$${service.price * quantity}Rwf`}</p>
+                    <p className="">{`${service.price * quantity}Rwf`}</p>
                   </div>
-                  <div className="form-control">
-                    <label className="label">Quantity</label>
-                    <input
-                      type="number"
-                      className="input input-bordered"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-control">
-                    <label className="label">Location</label>
-                    <input
-                      type="text"
-                      className="input input-bordered"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                    />
-                  </div>
+                  {service.soldInUnits && (
+                    <div className="form-control">
+                      <label className="label">Quantity</label>
+                      <input
+                        type="number"
+                        className="input input-bordered"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                      />
+                    </div>
+                  )}
+                  {service.locationRequired && (
+                    <div className="form-control">
+                      <label className="label">Location</label>
+                      <input
+                        type="text"
+                        className="input input-bordered"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                      />
+                    </div>
+                  )}
                   <div className="form-control">
                     <label className="label">Notes</label>
                     <textarea

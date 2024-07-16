@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Getorders from '../services/Getorders';
 import { format } from 'date-fns';
 import {toast} from 'react-toastify'
+import AdminNavbar from './AdminNavbar';
 
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
@@ -64,7 +65,7 @@ const OrderDetailsPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24 min-h-screen">
+    <><AdminNavbar /><div className="container mx-auto py-4 px-2 sm:px-6 lg:px-24 min-h-screen">
       <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Details</h1>
       {order && (
         <div>
@@ -72,7 +73,8 @@ const OrderDetailsPage = () => {
             <h2 className="text-2xl font-semibold">Order Information</h2>
             <p><strong>Order Date:</strong> {format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm')}</p>
             <p><strong>Service Name:</strong> {order.service.Name}</p>
-            <p><strong>Service Description:</strong> {order.service.Description}</p>
+            <p><strong>notes:</strong> {order.notes || 'Notes not available'}</p>
+            <p><strong>Location:</strong> {order.location || 'Not provided'}</p>
             <p><strong>Service Type:</strong> {order.service.Type}</p>
             <p><strong>User Email:</strong> {order.user.email}</p>
             <p><strong>Quantity:</strong> {order.quantity}</p>
@@ -101,7 +103,7 @@ const OrderDetailsPage = () => {
           </div>
         </div>
       )}
-    </div>
+    </div></>
   );
 };
 
