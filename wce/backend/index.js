@@ -26,8 +26,8 @@ app.use(middleware.requestLogger);
 // app.use(middleware.userExtractor);
 
 // MongoDB connection string
-const uri = 'mongodb://localhost:27017/';
-const urI = "mongodb+srv://yvescadio:Cadio0011@wealthinf.ezi4aqz.mongodb.net/?retryWrites=true&w=majority&appName=wealthInf";
+const urI = 'mongodb://localhost:27017/';
+const uri = "mongodb+srv://yvescadio:Cadio0011@wealthinf.ezi4aqz.mongodb.net/?retryWrites=true&w=majority&appName=wealthInf";
 
 mongoose.set('strictQuery', false);
 
