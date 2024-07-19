@@ -10,6 +10,7 @@ const usersRouter = require('./controlers/userrouter');
 const LogiRouter = require('./controlers/Loginrouter');
 const Messagerouter = require('./controlers/messageRoutes');
 const Noticerouter = require('./controlers/noticeRoutes');
+const Tokenrouter = require('./controlers/Tokenrouter')
 require('dotenv').config();
 
 console.log(process.env.SECRET);
@@ -44,11 +45,11 @@ mongoose.connect(uri)
 
 // Serve static files from the 'dist' directory
 app.use(express.static(path.join(__dirname, 'dist')));
-
 app.use(middleware.tokenExtractor);
 app.use('/api/services', serviceRouter); // Example usage, adjust as needed
 app.use('/api/oders', middleware.userExtractor, Oderrouter);
 app.use('/api/users', middleware.userExtractor, usersRouter);
+app.use('/api/tokens', middleware.userExtractor, Tokenrouter)
 app.use('/api/login', LogiRouter);
 app.use('/api/messages', middleware.userExtractor, Messagerouter);
 app.use('/api/notices', middleware.userExtractor, Noticerouter);

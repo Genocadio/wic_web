@@ -20,6 +20,7 @@ Servicerouter.post('/', async (request, response) => {
       Name: body.Name,
       Description: body.Description || '',
       Type: body.Type || '',
+      Subtype: body.Subtype || '', // Added subtype field
       ImageLinks: body.ImageLinks || [],
       VideoLinks: body.VideoLinks || [],
       showImages: body.showImages || false,
@@ -53,6 +54,7 @@ Servicerouter.put('/:id', async (request, response) => {
       Name: body.Name,
       Description: body.Description,
       Type: body.Type,
+      Subtype: body.Subtype, // Added subtype field
       ImageLinks: body.ImageLinks,
       VideoLinks: body.VideoLinks,
       showImages: body.showImages,
