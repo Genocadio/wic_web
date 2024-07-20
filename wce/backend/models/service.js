@@ -4,7 +4,7 @@ const serviceSchema = new mongoose.Schema({
   Name: { type: String, required: true },
   Description: String,
   Type: String,
-  Subtype: String,  // Added subtype field
+  Subtype: { type: String, default: "other" }, // Added subtype field
   ImageLinks: [String],
   VideoLinks: [String],
   showImages: { type: Boolean, default: false },
