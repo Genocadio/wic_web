@@ -1,79 +1,88 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import Navbar from './User/Navbar';
 import getServices from './services/getServices';
-import Getorders from './services/Getorders'; // Import orderServices module
+import Getorders from './services/Getorders';
 import { toast } from 'react-toastify';
 import 'daisyui/dist/full.css';
 
+// Function to fetch the service by ID
+const fetchService = async (id) => {
+  const serviceData = await getServices.getById(id);
+  return serviceData;
+};
+
+// Function to create an order
+const createOrder = async (newOrder) => {
+  // Retrieve token from localStorage
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+  const token = loggedInUser.token;
+
+  // Set token in orderServices module
+  Getorders.setToken(token);
+
+  // Call the create function from orderServices to post the order
+  await Getorders.create(newOrder);
+};
+
 const OrderPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate(); // Initialize useNavigate
-  const [service, setService] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setpaymentMethod] = useState('MOMO');
+  const [paymentMethod, setPaymentMethod] = useState('MOMO');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-  useEffect(() => {
-    const fetchService = async () => {
-      try {
-        const serviceData = await getServices.getById(id);
-        setService(serviceData);
-        setLoading(false);
-      } catch (error) {
-        setError('Error fetching service details');
-        setLoading(false);
+  // Fetch the service details using useQuery
+  const { data: service, error, isLoading } = useQuery({
+    queryKey: ['service', id],
+    queryFn: () => fetchService(id),
+  });
+
+  // Mutation to place the order using useMutation
+  const mutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: () => {
+      toast.success('Order placed successfully!');
+      // navigate('/oders');
+    },
+    onError: (error) => {
+      console.error('Error placing order:', error);
+      if (error.response && error.response.status === 401) {
+        navigate('/login');
+      } else {
+        toast.error('Failed to place order. Please try again.');
       }
+    },
+    onSettled: () => {
+      setIsPlacingOrder(false);
+    }
+  });
+
+  const handlePlaceOrder = () => {
+    setIsPlacingOrder(true);
+    const totalPrice = service.price * quantity;
+
+    const newOrder = {
+      serviceId: service.id,
+      quantity,
+      totalPrice,
+      location,
+      notes,
+      paymentMethod
     };
 
-    fetchService();
-  }, [id]);
-
-  const handlePlaceOrder = async () => {
-    try {
-      const totalPrice = service.price * quantity;
-
-      const newOrder = {
-        serviceId: service.id, // Assuming service object has an _id field
-        quantity,
-        totalPrice,
-        location,
-        notes,
-        paymentMethod
-      };
-
-      // Retrieve token from localStorage
-      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-      const token = loggedInUser.token;
-      
-      // Set token in orderServices module
-      Getorders.setToken(token);
-
-      // Call the create function from orderServices to post the order
-      await Getorders.create(newOrder);
-      toast.success('Order placed successfully!'); // Example of notifying the user
-
-      // Optional: Redirect the user to another page after successful order placement
-      // navigate('/orders'); // Make sure to import useNavigate from react-router-dom
-    } catch (error) {
-      console.error('Error placing order:', error);
-      // Handle error state or display error message to the user
-      if (error.response && error.response.status === 401) {
-        // Redirect to login if 401 Unauthorized
-        navigate('/login');
-      }
-    }
+    mutation.mutate(newOrder);
   };
 
-  if (loading) {
-    return <p className="text-center text-lg">Loading...</p>;
+  if (isLoading) {
+    return <p className="text-center min-h-screen text-lg">Loading...</p>;
   }
 
   if (error) {
-    return <p className="text-center text-lg text-red-500">{error}</p>;
+    return <p className="text-center text-lg text-red-500">Error fetching service details</p>;
   }
 
   return (
@@ -108,7 +117,7 @@ const OrderPage = () => {
                         type="number"
                         className="input input-bordered"
                         value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
+                        onChange={(e) => setQuantity(Number(e.target.value))}
                       />
                     </div>
                   )}
@@ -136,7 +145,7 @@ const OrderPage = () => {
                     <select
                       className="select select-bordered"
                       value={paymentMethod}
-                      onChange={(e) => setpaymentMethod(e.target.value)}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
                     >
                       <option value="MOMO">MOMO</option>
                       <option value="Airtel">Airtel</option>
@@ -148,8 +157,12 @@ const OrderPage = () => {
                       <p className="mt-2">Pay using Airtel.</p>
                     )}
                   </div>
-                  <button className="btn btn-primary mt-4" onClick={handlePlaceOrder}>
-                    Place Order
+                  <button
+                    className="btn btn-primary mt-4"
+                    onClick={handlePlaceOrder}
+                    disabled={isPlacingOrder}
+                  >
+                    {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
                   </button>
                 </div>
               </div>

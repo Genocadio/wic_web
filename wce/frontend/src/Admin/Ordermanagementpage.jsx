@@ -2,64 +2,60 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Getorders from '../services/Getorders';
 import { format } from 'date-fns';
 import Filter from '../components/Filter';
 import AdminNavbar from './AdminNavbar';
 
 const OrderManagementPage = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [sortCriteria, setSortCriteria] = useState('orderDate');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [confirmDeleteOrderId, setConfirmDeleteOrderId] = useState(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-        if (!loggedInUser) {
-          throw new Error('loggedInUser is null');
-        }
+  const { data: orders, isLoading, isError, error } = useQuery({
+    queryKey: ['orders'],
+    queryFn: async () => {
+      const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+      if (!loggedInUser) throw new Error('loggedInUser is null');
   
-        const token = loggedInUser.token;
-        Getorders.setToken(token);
+      const token = loggedInUser.token;
+      Getorders.setToken(token);
   
-        const ordersData = await Getorders.getAll();
-        setOrders(ordersData);
-        setLoading(false);
-      } catch (error) {
-        if (error.message === 'loggedInUser is null' || error.response?.status === 401) {
-          navigate('/login');
-        } else {
-          console.error('Error fetching orders:', error);
-          setError(error.message || 'Error fetching orders');
-          setLoading(false);
-        }
+      return await Getorders.getAll();
+    },
+    onError: (error) => {
+      if (error.message === 'loggedInUser is null' || error.response?.status === 401) {
+        navigate('/login');
+      } else {
+        console.error('Error fetching orders:', error);
       }
-    };
-  
-    fetchOrders();
-  }, [navigate]);
-  
-  const handleDeleteOrder = async (orderId) => {
+    }
+  });
+
+  const mutation = useMutation({
+    mutationFn: (orderId) => Getorders.remove(orderId),
+    onSuccess: () => {
+      toast.success('Order deleted successfully');
+      queryClient.invalidateQueries(['orders']);
+      setConfirmDeleteOrderId(null);
+    },
+    onError: (error) => {
+      console.error('Error deleting order:', error);
+      toast.error('Error deleting order');
+    }
+  });
+
+  const handleDeleteOrder = (orderId) => {
     setConfirmDeleteOrderId(orderId);
   };
 
-  const handleConfirmDelete = async () => {
-    try {
-      await Getorders.remove(confirmDeleteOrderId);
-      toast.success('Order deleted successfully');
-      setOrders(orders.filter(order => order.id !== confirmDeleteOrderId));
-    
-      setConfirmDeleteOrderId(null);
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      setError(error.message || 'Error deleting order');
-      toast.error('Error deleting order');
+  const handleConfirmDelete = () => {
+    if (confirmDeleteOrderId) {
+      mutation.mutate(confirmDeleteOrderId);
     }
   };
 
@@ -69,30 +65,33 @@ const OrderManagementPage = () => {
 
   const handleSortChange = (criteria) => {
     setSortCriteria(criteria);
-    let sortedOrders = [...orders];
-    if (criteria === 'orderDate') {
-      sortedOrders.sort((a, b) => new Date(a.orderDate) - new Date(b.orderDate));
-    } else if (criteria === 'serviceName') {
-      sortedOrders.sort((a, b) => a.serviceName.localeCompare(b.serviceName));
-    }
-    setOrders(sortedOrders);
   };
 
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
   };
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders?.filter(order => {
     const matchesSearch = order.user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter ? order.status === statusFilter : true;
     return matchesSearch && matchesStatus;
+  }) || [];
+
+  const serviceStatusOptions = Array.from(new Set(orders?.map(order => order.status) || []));
+
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    if (sortCriteria === 'orderDate') {
+      return new Date(a.orderDate) - new Date(b.orderDate);
+    } else if (sortCriteria === 'serviceName') {
+      return a.serviceName.localeCompare(b.serviceName);
+    }
+    return 0;
   });
 
-  const serviceStatusOptions = Array.from(new Set(orders.map(order => order.status)));
-
-  if (loading) {
+  if (isLoading) {
     return (
       <>
+        <AdminNavbar />
         <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
           <div className="overflow-x-auto lg:mx-6">
             <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
@@ -117,13 +116,13 @@ const OrderManagementPage = () => {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <>
         <AdminNavbar />
         <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
           <h1 className="text-center text-4xl font-bold mb-10 text-gray-800">Order Management</h1>
-          <p>Error: {error}</p>
+          <p>Error: {error.message}</p>
         </div>
       </>
     );
@@ -170,7 +169,7 @@ const OrderManagementPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order, index) => (
+              {sortedOrders.map((order, index) => (
                 <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
                   <td className="py-2 px-4">{format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm')}</td>
                   <td className="py-2 px-4">{order.serviceName}</td>
@@ -190,15 +189,17 @@ const OrderManagementPage = () => {
       {confirmDeleteOrderId && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-black bg-opacity-50 absolute inset-0"></div>
-          <div className="bg-white p-6 rounded shadow-lg z-10">
+          <div className="bg-white p-6 rounded shadow-lg relative z-10">
+            <h2 className="text-lg font-bold mb-4">Confirm Deletion</h2>
             <p>Are you sure you want to delete this order?</p>
-            <div className="flex justify-end mt-4">
-              <button onClick={handleCancelDelete} className="btn btn-sm btn-primary mr-2">Cancel</button>
-              <button onClick={handleConfirmDelete} className="btn btn-sm btn-error">Delete</button>
+            <div className="mt-4 flex justify-end">
+              <button onClick={handleCancelDelete} className="btn btn-secondary mr-2">Cancel</button>
+              <button onClick={handleConfirmDelete} className="btn btn-error">Delete</button>
             </div>
           </div>
         </div>
       )}
+      <ToastContainer />
     </>
   );
 };

@@ -1,7 +1,7 @@
 // src/services/orderServices.js
 import axios from 'axios';
 
-const baseUrl = 'http://localhost:3001/api/oders';
+const baseUrl = '/api/oders';
 
 let token = null;
 

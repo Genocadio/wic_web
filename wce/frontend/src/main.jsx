@@ -2,6 +2,8 @@ import React from 'react';
 import './index.css';
 import { createRoot } from 'react-dom/client'; // Import createRoot from react-dom/client
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; // Import QueryClient and QueryClientProvider
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'; // Import React Query Devtools
 import { ToastContainer } from 'react-toastify'; // Import ToastContainer
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 import App from './App.jsx';
@@ -26,6 +28,10 @@ import AdminNoticesPage from './Admin/AdminNoticePage.jsx';
 import AdminMessagesPage from './Admin/AdminMessagesPage.jsx';
 import UserMessagesPage from './User/UserMessagesPage.jsx';
 import DataExportPage from './Admin/DataExportPage.jsx';
+import ServicesBySubtype from './User/Servicesubtype.jsx';
+
+// Create a QueryClient instance
+const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
@@ -104,14 +110,21 @@ const router = createBrowserRouter([
   {
     path: '/data-export',
     element: <ProtectedRoute element={<DataExportPage />} />
+  },
+  {
+    path: '/services/:subtype',
+    element: <ServicesBySubtype />,
   }
 ]);
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
-      <ToastContainer position="top-center" autoClose={3000} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <ToastContainer position="top-center" autoClose={3000} />
+        <ReactQueryDevtools initialIsOpen={false} /> {/* Add React Query Devtools */}
+      </QueryClientProvider>
     </AuthProvider>
   </React.StrictMode>,
 );

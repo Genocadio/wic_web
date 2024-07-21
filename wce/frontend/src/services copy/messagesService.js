@@ -1,7 +1,7 @@
-// src/services/noticesService.js
+// src/services/messagesService.js
 import axios from 'axios';
 
-const baseUrl = 'http://localhost:3001/api/notices';
+const baseUrl = '/api/messages';
 
 let token = null;
 
@@ -44,8 +44,8 @@ const getById = async (id) => {
     const response = await axios.get(`${baseUrl}/${id}`, getAuthConfig());
     return response.data;
   } catch (error) {
-    console.error(`Error fetching notice details for ID ${id}:`, error);
-    throw new Error('Failed to fetch notice details');
+    console.error(`Error fetching message details for ID ${id}:`, error);
+    throw new Error('Failed to fetch message details');
   }
 };
 

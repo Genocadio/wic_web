@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import getServices from './services/getServices'; // Assuming this function exists
 import VideoOrYouTubePlayer from './components/youtubevideo'; // Adjust the import path as per your file structure
 import Navbar from './User/Navbar';
 import 'daisyui'; // Make sure DaisyUI is installed and imported
 
+const fetchServiceById = async (id) => {
+  const response = await getServices.getById(id);
+  return response;
+};
+
 const ServicePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [service, setService] = useState(null);
   const [showImages, setShowImages] = useState(false);
   const [showVideos, setShowVideos] = useState(false);
 
@@ -17,29 +22,42 @@ const ServicePage = () => {
 
     if (loggedInUser && loggedInUser.token) {
       getServices.setToken(loggedInUser.token);
-
-      getServices.getById(id)
-        .then(response => {
-          setService(response);
-          setShowImages(response.showImages);
-          setShowVideos(response.showVideos);
-        })
-        .catch(error => {
-          console.error('Error fetching service details:', error);
-          if (error.response && error.response.status === 401) {
-            navigate('/login');
-          } else {
-            // Handle other error states or display error message
-          }
-        });
     } else {
       navigate('/login');
     }
-  }, [id, navigate]);; // Dependency on `id` parameter
+  }, [navigate]);
+
+  const { data: service, isLoading, error } = useQuery({
+    queryKey: ['service', id],
+    queryFn: () => fetchServiceById(id),
+  });
+
+  useEffect(() => {
+    if (service) {
+      setShowImages(service.showImages);
+      setShowVideos(service.showVideos);
+    }
+  }, [service]);
 
   const handlePlaceOrder = () => {
     navigate(`/pay/${id}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500">
+        Error fetching service details: {error.message}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -49,7 +67,7 @@ const ServicePage = () => {
           {service ? (
             <>
               <div className="flex rounded-box flex-col md:flex-row bg-base-100 shadow-xl p-4 space-y-4 md:space-y-0 md:space-x-4">
-              <div className={`flex flex-col ${showImages && service.ImageLinks.length > 0 ? 'md:w-1/2' : 'md:w-full'}`}>
+                <div className={`flex flex-col ${showImages && service.ImageLinks.length > 0 ? 'md:w-1/2' : 'md:w-full'}`}>
                   <div className="rounded-box hero bg-base-200 h-full">
                     <div className="hero-content text-center">
                       <div className="max-w-md">

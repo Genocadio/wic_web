@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import UserService from '../services/UserService'; // Import UserService module
+import UserService from '../services/UserService';
 import AdminNavbar from '../Admin/AdminNavbar';
 import { toast } from 'react-toastify';
 import MessageForm from '../User/MessageForm';
@@ -8,8 +8,8 @@ const UserDetails = () => {
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false); // Flag for enabling edit mode
-  const [editPasswordMode, setEditPasswordMode] = useState(false); // Flag for enabling password edit mode
+  const [editMode, setEditMode] = useState(false);
+  const [editPasswordMode, setEditPasswordMode] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -20,10 +20,9 @@ const UserDetails = () => {
     newPassword: '',
     confirmPassword: '',
   });
-  const [showMessageForm, setShowMessageForm] = useState(false); // State for toggling message form
+  const [showMessageForm, setShowMessageForm] = useState(false);
 
   useEffect(() => {
-    // Fetch logged-in user from localStorage
     const storedUser = JSON.parse(localStorage.getItem('loggedInUser'));
     if (storedUser) {
       setLoggedInUser(storedUser);
@@ -35,12 +34,10 @@ const UserDetails = () => {
       setLoading(true);
       try {
         if (loggedInUser) {
-          // Ensure token is set before fetching user details
           UserService.setToken(loggedInUser.token);
-          const fetchedUser = await UserService.getById(loggedInUser.id); // Using UserService to fetch user details
+          const fetchedUser = await UserService.getById(loggedInUser.id);
           setUser(fetchedUser);
           setLoading(false);
-          // Initialize form data with fetched user details
           setFormData({
             firstName: fetchedUser.firstName || '',
             lastName: fetchedUser.lastName || '',
@@ -51,7 +48,6 @@ const UserDetails = () => {
       } catch (error) {
         console.error('Error fetching user details:', error);
         setLoading(false);
-        // Handle error fetching user details
       }
     };
 
@@ -78,48 +74,42 @@ const UserDetails = () => {
     const hasLowerCase = /[a-z]/.test(password);
     const hasDigit = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  
+
     return password.length >= minLength && hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
   };
 
   const handleEditSave = async () => {
     try {
       if (loggedInUser) {
-        // Ensure token is set before updating user details
         UserService.setToken(loggedInUser.token);
-        const updatedUser = await UserService.update(loggedInUser.id, formData); // Using UserService to update user details
-        setUser(updatedUser); // Update the user state with updated details
+        const updatedUser = await UserService.update(loggedInUser.id, formData);
+        setUser(updatedUser);
         setEditMode(false);
         toast.success('Updated your user information');
-        // Optionally show success message or update state
       }
     } catch (error) {
       console.error('Error updating user details:', error);
-      // Handle error updating user details
     }
   };
 
   const handleChangePassword = async () => {
     try {
       if (!loggedInUser) {
-        return; // Handle case where user is not logged in
+        return;
       }
 
       const { newPassword, confirmPassword } = passwordFormData;
 
-      // Check if passwords match
       if (newPassword !== confirmPassword) {
         toast.error('Passwords do not match.');
         return;
       }
 
-      // Check if password meets criteria
       if (!isValidPassword(newPassword)) {
         toast.error('Password does not meet criteria.');
         return;
       }
 
-      // Ensure token is set before updating user password
       UserService.setToken(loggedInUser.token);
       const updatedUser = await UserService.update(loggedInUser.id, { password: newPassword });
       setUser(updatedUser);
@@ -127,14 +117,12 @@ const UserDetails = () => {
       setEditPasswordMode(false);
     } catch (error) {
       console.error('Error updating password:', error);
-      // Handle error updating password
       toast.error('Error updating password. Please try again.');
     }
   };
 
   const handleMessageCreated = (newMessage) => {
-    // toast.success('Message created successfully!');
-    setShowMessageForm(false); // Hide message form after creating a message
+    setShowMessageForm(false);
   };
 
   if (loading) {
@@ -167,7 +155,6 @@ const UserDetails = () => {
             <div>
               <strong>Location:</strong> {user.location}
             </div>
-            {/* Add more fields as needed */}
             <div className="space-x-4">
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -224,7 +211,7 @@ const UserDetails = () => {
                   type="text"
                   id="email"
                   name="email"
-                  value={user.email} // Display email (assuming it's not editable)
+                  value={user.email}
                   readOnly
                   className="border rounded px-3 py-2 mt-1 bg-gray-100"
                 />
@@ -256,10 +243,9 @@ const UserDetails = () => {
                 />
               </label>
             </div>
-            {/* Add more editable fields as needed */}
             <div className="space-x-4">
               <button
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 onClick={handleEditSave}
               >
                 Save
@@ -273,61 +259,61 @@ const UserDetails = () => {
             </div>
           </div>
         )}
+
         {editPasswordMode && (
-          <div className="mt-4 space-y-4">
-            <h2 className="text-xl font-bold mb-2">Change Password</h2>
-            <div>
-              <label htmlFor="newPassword" className="block">
-                New Password:
-                <input
-                  type="password"
-                  id="newPassword"
-                  name="newPassword"
-                  value={passwordFormData.newPassword}
-                  onChange={handlePasswordChange}
-                  className="border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-            </div>
-            <div>
-              <label htmlFor="confirmPassword" className="block">
-                Confirm Password:
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={passwordFormData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  className="border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </label>
-            </div>
-            <div className="space-x-4">
-              <button
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                onClick={handleChangePassword}
-              >
-                Save Password
-              </button>
-              <button
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                onClick={() => setEditPasswordMode(false)}
-              >
-                Cancel
-              </button>
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4">Change Password</h2>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="newPassword" className="block">
+                  New Password:
+                  <input
+                    type="password"
+                    id="newPassword"
+                    name="newPassword"
+                    value={passwordFormData.newPassword}
+                    onChange={handlePasswordChange}
+                    className="border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+              </div>
+              <div>
+                <label htmlFor="confirmPassword" className="block">
+                  Confirm Password:
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={passwordFormData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="border rounded px-3 py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </label>
+              </div>
+              <div className="space-x-4">
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={handleChangePassword}
+                >
+                  Save
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  onClick={() => setEditPasswordMode(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
+
         {showMessageForm && (
-          <div className="mt-4">
-            <MessageForm onMessageCreated={handleMessageCreated} />
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2"
-              onClick={() => setShowMessageForm(false)}
-            >
-              Cancel
-            </button>
-          </div>
+          <MessageForm
+            userId={loggedInUser.id}
+            onMessageCreated={handleMessageCreated}
+            onCancel={() => setShowMessageForm(false)}
+          />
         )}
       </div>
     </>

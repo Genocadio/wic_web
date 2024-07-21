@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify'; // Import toast from react-toastify
 import getServices from '../services/getServices';
 import messagesService from '../services/messagesService';
 import noticesService from '../services/noticesService';
+import { AuthContext } from '../AuthContext';
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -21,8 +22,10 @@ const Navbar = () => {
   const [searchResultsVisible, setSearchResultsVisible] = useState(false);
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')); // Parse the string to an object
   const toastShownRef = useRef(false);
+  const { refreshAccessToken } = useContext(AuthContext);
 
   useEffect(() => {
+    refreshAccessToken()
     getServices
       .getAll()
       .then(response => {
@@ -30,6 +33,7 @@ const Navbar = () => {
       })
       .catch(error => console.log(error));
 
+    
     noticesService
       .getAll()
       .then(notices => {

@@ -9,6 +9,7 @@ const AddService = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('');
+  const [subtype, setSubtype] = useState(''); // New state for subtype
   const [imageLinks, setImageLinks] = useState('');
   const [videoLinks, setVideoLinks] = useState('');
   const [showImages, setShowImages] = useState(false);
@@ -22,26 +23,29 @@ const AddService = () => {
     e.preventDefault();
     try {
       const newService = {
-        Name: name,
-        Description: description,
-        Type: type,
+        Name: name.trim(),
+        Description: description.trim(),
+        Type: type.trim(),
+        Subtype: subtype.trim(), // Include subtype
         ImageLinks: imageLinks.split(',').map(link => link.trim()),
         VideoLinks: videoLinks.split(',').map(link => link.trim()),
         showImages: showImages,
         showVideos: showVideos,
         soldInUnits: soldInUnits,
-        price: price,
+        price: parseFloat(price), // Convert to number
         locationRequired: locationRequired,
       };
 
       await getService.create(newService);
 
       // Show success toast
+      toast.success('Service added successfully');
 
       // Reset form fields after successful addition
       setName('');
       setDescription('');
       setType('');
+      setSubtype(''); // Reset subtype
       setImageLinks('');
       setVideoLinks('');
       setShowImages(false);
@@ -52,7 +56,6 @@ const AddService = () => {
       setError(null);
 
       // Redirect to services list page or dashboard
-      toast.success('Service added successfully');
       navigate('/manage-services');
     } catch (error) {
       setError(error.message || 'Failed to add service');
@@ -99,6 +102,15 @@ const AddService = () => {
               value={type}
               onChange={(e) => setType(e.target.value)}
               required
+            />
+            <label htmlFor="subtype" className="sr-only">Subtype</label>
+            <input
+              type="text"
+              id="subtype"
+              className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+              placeholder="Subtype"
+              value={subtype}
+              onChange={(e) => setSubtype(e.target.value)}
             />
             <label htmlFor="imageLinks" className="sr-only">Image Links (comma-separated)</label>
             <input
@@ -176,6 +188,7 @@ const AddService = () => {
           </button>
         </form>
       </div>
+      <ToastContainer />
     </>
   );
 };

@@ -13,6 +13,7 @@ const ServiceDetails = () => {
     Name: '',
     Description: '',
     Type: '',
+    Subtype: '',
     ImageLinks: '',
     VideoLinks: '',
     showImages: false,
@@ -36,6 +37,7 @@ const ServiceDetails = () => {
         Name: serviceData?.Name || '',
         Description: serviceData?.Description || '',
         Type: serviceData?.Type || '',
+        Subtype: serviceData?.Subtype || '', 
         ImageLinks: serviceData?.ImageLinks?.join(', ') || '',
         VideoLinks: serviceData?.VideoLinks?.join(', ') || '',
         showImages: serviceData?.showImages || false,
@@ -74,7 +76,31 @@ const ServiceDetails = () => {
     }
   };
 
-  if (!service) return <p>Loading...</p>;
+  if (!service) return (
+    <>
+    <AdminNavbar />
+      <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
+        <div className="overflow-x-auto lg:mx-6">
+          <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+            <tbody>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                  <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                  <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                  <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                  <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                  <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                  <td className="py-2 px-4">
+                    <div className="skeleton h-4 w-1/2"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <><AdminNavbar /><div className="flex justify-center  min-h-screen">
@@ -113,6 +139,15 @@ const ServiceDetails = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   required />
               </div>
+              <div>
+                  <label className="block text-sm font-medium text-gray-700">Subtype</label>
+                  <input
+                    type="text"
+                    name="Subtype"
+                    value={formData.Subtype}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Price</label>
                 <input
@@ -221,8 +256,12 @@ const ServiceDetails = () => {
               <div className="mt-1">{formData.Type}</div>
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700">SubType</label>
+              <div className="mt-1">{formData.Subtype}</div>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700">Price</label>
-              <div className="mt-1">${formData.price}</div>
+              <div className="mt-1">{formData.price}Rwf</div>
             </div>
             {formData.ImageLinks && (
               <div>

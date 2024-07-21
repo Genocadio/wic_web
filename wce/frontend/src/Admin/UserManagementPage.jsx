@@ -1,117 +1,110 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import UserService from '../services/UserService';
 import Filter from '../components/Filter';
 import EditUserForm from '../components/EditUserForm';
 import AdminNavbar from './AdminNavbar';
 import { toast } from 'react-toastify';
 
+const fetchUsers = async () => {
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+  if (!loggedInUser) throw new Error('loggedInUser is null');
+  UserService.setToken(loggedInUser.token);
+
+  const usersData = await UserService.getAll();
+  if (!Array.isArray(usersData)) throw new Error('Invalid data format');
+  return usersData;
+};
+
+const deleteUser = async (userId) => {
+  await UserService.remove(userId);
+};
+
+const updateUser = async (user) => {
+  await UserService.update(user.id, user);
+};
+
 const UserManagementPage = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [editUserId, setEditUserId] = useState(null);
-  const [confirmDeleteUserId, setConfirmDeleteUserId] = useState(null); // Track user ID for delete confirmation
-  const [isAdmin, setIsAdmin] = useState(true); // Default to admin
+  const [confirmDeleteUserId, setConfirmDeleteUserId] = useState(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-        if (!loggedInUser) {
-          throw new Error('loggedInUser is null');
-        }
-
-        const token = loggedInUser.token;
-        UserService.setToken(token);
-
-        const usersData = await UserService.getAll();
-        if (Array.isArray(usersData)) {
-          setUsers(usersData);
-        } else {
-          throw new Error('Invalid data format');
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        if (error.message === 'loggedInUser is null' || error.response?.status === 401 || error.response?.status === 403) {
-          navigate('/login');
-        } else {
-          setError(error.message || 'Error fetching users');
-        }
-        setLoading(false);
+  const { data: users = [], isLoading, isError, error } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers,
+    onError: (error) => {
+      if (error.message === 'loggedInUser is null' || error.response?.status === 401 || error.response?.status === 403) {
+        navigate('/login');
+      } else {
+        toast.error(error.message || 'Error fetching users');
       }
-    };
+    },
+  });
 
-    fetchUsers();
-  }, [navigate]);
-
-  const handleDeleteUser = async (userId) => {
-    setConfirmDeleteUserId(userId); // Set the userId to confirm deletion
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      await UserService.remove(confirmDeleteUserId);
-      setUsers(users.filter(user => user.id !== confirmDeleteUserId));
+  const deleteUserMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
       toast.success('User deleted successfully');
-      setConfirmDeleteUserId(null); // Clear confirmation state
-    } catch (error) {
-      console.error('Error deleting user:', error);
+      setConfirmDeleteUserId(null);
+    },
+    onError: (error) => {
       if (error.response?.status === 401 || error.response?.status === 403) {
         navigate('/login');
       } else {
-        setError(error.message || 'Error deleting user');
+        toast.error(error.message || 'Error deleting user');
       }
-    }
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: updateUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+      toast.success('User updated successfully');
+      setEditUserId(null);
+    },
+    onError: (error) => {
+      if (error.response?.status === 401) {
+        navigate('/login');
+      } else {
+        toast.error(error.message || 'Error editing user');
+      }
+    },
+  });
+
+  const handleDeleteUser = (userId) => {
+    setConfirmDeleteUserId(userId);
+  };
+
+  const handleConfirmDelete = () => {
+    deleteUserMutation.mutate(confirmDeleteUserId);
   };
 
   const handleCancelDelete = () => {
-    setConfirmDeleteUserId(null); // Clear confirmation state
+    setConfirmDeleteUserId(null);
   };
 
-  const handleToggleUserStatus = async (userId) => {
+  const handleToggleUserStatus = (userId) => {
     const user = users.find(user => user.id === userId);
     const newStatus = user.status === 'active' ? 'inactive' : 'active';
     const action = newStatus === 'active' ? 'activate' : 'deactivate';
 
     if (window.confirm(`Are you sure you want to ${action} this user?`)) {
-      try {
-        const updatedUser = { ...user, status: newStatus };
-        await UserService.update(userId, updatedUser);
-        setUsers(users.map(user => (user.id === userId ? updatedUser : user)));
-      } catch (error) {
-        console.error(`Error ${action}ing user:`, error);
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          navigate('/login');
-        } else {
-          setError(error.message || `Error ${action}ing user`);
-        }
-      }
+      updateUserMutation.mutate({ ...user, status: newStatus });
     }
   };
 
-  const handleToggleUserType = async (userId) => {
+  const handleToggleUserType = (userId) => {
     const user = users.find(user => user.id === userId);
     const newType = user.userType === 'admin' ? 'customer' : 'admin';
     const action = newType === 'admin' ? 'make admin' : 'make customer';
 
     if (window.confirm(`Are you sure you want to ${action} this user?`)) {
-      try {
-        const updatedUser = { ...user, userType: newType };
-        await UserService.update(userId, updatedUser);
-        setUsers(users.map(user => (user.id === userId ? updatedUser : user)));
-        toast.success(`User type updated successfully to ${newType}`);
-      } catch (error) {
-        console.error(`Error updating user type:`, error);
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          navigate('/login');
-        } else {
-          setError(error.message || `Error updating user type`);
-        }
-      }
+      updateUserMutation.mutate({ ...user, userType: newType });
     }
   };
 
@@ -128,40 +121,40 @@ const UserManagementPage = () => {
     setEditUserId(null);
   };
 
-  const handleEditUser = async (editedUser) => {
-    try {
-      const userWithId = { ...editedUser, id: editUserId };
-      await UserService.update(userWithId.id, userWithId);
-      toast.success('User updated successfully');
-      setUsers(users.map(user => (user.id === userWithId.id ? userWithId : user)));
-      exitEditMode();
-    } catch (error) {
-      console.error('Error editing user:', error);
-      if (error.response?.status === 401) {
-        navigate('/login');
-      } else {
-        setError(error.message || 'Error editing user');
-      }
-    }
+  const handleEditUser = (editedUser) => {
+    updateUserMutation.mutate(editedUser);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex w-52 flex-col gap-4 min-h-full">
-        <div className="flex items-center gap-4">
-          <div className="skeleton h-16 w-16 shrink-0 rounded-full"></div>
-          <div className="flex flex-col gap-4">
-            <div className="skeleton h-4 w-20"></div>
-            <div className="skeleton h-4 w-28"></div>
+      <>
+        <AdminNavbar />
+        <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
+          <div className="overflow-x-auto lg:mx-6">
+            <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+              <tbody>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4"><div className="skeleton h-4 w-full"></div></td>
+                    <td className="py-2 px-4">
+                      <div className="skeleton h-4 w-1/2"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-        <div className="skeleton h-32 w-full"></div>
-      </div>
+      </>
     );
   }
 
-  if (error) {
-    return <p>Error: {error}</p>;
+  if (isError) {
+    return <p>Error: {error.message}</p>;
   }
 
   return (
@@ -210,21 +203,21 @@ const UserManagementPage = () => {
                   </div>
 
                   <p className="mb-2"><strong>Status:</strong> {user.status}</p>
-                  <div className="flex space-x-4 mt-4">
+                  <div className="flex flex-wrap gap-4 mt-4">
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-primary flex-grow sm:flex-grow-0"
                       onClick={() => enterEditMode(user.id)}
                     >
                       Edit
                     </button>
                     <button
-                      className={`btn ${user.status === 'active' ? 'btn-warning' : 'btn-success'}`}
+                      className={`btn ${user.status === 'active' ? 'btn-warning' : 'btn-success'} flex-grow sm:flex-grow-0`}
                       onClick={() => handleToggleUserStatus(user.id)}
                     >
                       {user.status === 'active' ? 'Deactivate' : 'Activate'}
                     </button>
                     <button
-                      className="btn btn-danger"
+                      className="btn btn-danger flex-grow sm:flex-grow-0"
                       onClick={() => handleDeleteUser(user.id)}
                     >
                       Delete
@@ -235,14 +228,24 @@ const UserManagementPage = () => {
             </div>
           ))}
         </div>
-
         {confirmDeleteUserId && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded shadow-md text-center">
-              <p>Are you sure you want to delete this user?</p>
-              <div className="flex justify-center mt-4 space-x-4">
-                <button className="btn btn-danger" onClick={handleConfirmDelete}>Yes</button>
-                <button className="btn btn-secondary" onClick={handleCancelDelete}>No</button>
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-700 bg-opacity-50">
+            <div className="bg-white rounded-lg p-6 shadow-lg max-w-sm w-full">
+              <h3 className="text-lg font-semibold mb-4">Confirm Deletion</h3>
+              <p className="mb-4">Are you sure you want to delete this user? This action cannot be undone.</p>
+              <div className="flex justify-end gap-4">
+                <button
+                  className="btn btn-danger"
+                  onClick={handleConfirmDelete}
+                >
+                  Yes, Delete
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleCancelDelete}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>

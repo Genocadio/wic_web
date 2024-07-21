@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import getServices from '../services/getServices'; // Adjust the path as needed
 import ServiceCard from './ServiceCard';
 import { Link } from 'react-router-dom'; // Assuming you're using React Router for navigation
@@ -7,42 +8,42 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify CSS
 
 const ServiceManagement = () => {
-  const [services, setServices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [message, setMessage] = useState('');
-  const [type, setType] = useState('');
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchServices();
-  }, []);
-
-  const fetchServices = async () => {
-    try {
-      const data = await getServices.getAll();
-      setServices(data);
-    } catch (error) {
+  // Fetch services using React Query
+  const { data: services, isLoading, isError, error } = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices.getAll,
+    onError: (error) => {
       console.error('Error fetching services:', error);
-    }
-  };
+      toast.error('Error fetching services');
+    },
+  });
 
-  const handleDeleteService = async (serviceId) => {
-    try {
-      await getServices.delet(serviceId); // Corrected typo: changed delet to delete
-      // setMessage('Service deleted successfully');
+  // Mutation for deleting a service
+  const deleteServiceMutation = useMutation({
+    mutationFn: (serviceId) => getServices.delet(serviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['services']);
       toast.success('Service deleted successfully');
-      // setType('success');
-      fetchServices();
-    } catch (error) {
-      console.error(`Error deleting service with ID ${serviceId}:`, error);
+    },
+    onError: (error) => {
+      console.error('Error deleting service:', error);
       toast.error('Error deleting service');
-      // setMessage('Error deleting service');
-      // setType('error');
-    }
+    },
+  });
+
+  const handleDeleteService = (serviceId) => {
+    deleteServiceMutation.mutate(serviceId);
   };
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
   };
+
+  if (isLoading) return <p>Loading services...</p>;
+  if (isError) return <p>Error loading services: {error.message}</p>;
 
   const filteredServices = services.filter((service) =>
     service.Name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -75,6 +76,9 @@ const ServiceManagement = () => {
             <ServiceCard key={service.id} service={service} onDelete={handleDeleteService} />
           ))}
         </div>
+
+        {/* Toast Container */}
+        <ToastContainer />
       </div>
     </>
   );
