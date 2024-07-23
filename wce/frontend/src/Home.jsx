@@ -17,7 +17,14 @@ const Home = () => {
   });
   const [activeType, setActiveType] = useState(null);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-52 flex flex-col gap-4">
+        <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+        <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+      </div>
+    </div>
+  );
   if (error) return <div>Error fetching services: {error.message}</div>;
 
   // Function to handle click on service type button

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL =  '/api/tokens'; // Adjust URL as per your backend setup
+const BASE_URL =  'http://localhost:3001/api/tokens'; // Adjust URL as per your backend setup
 
 // Function to fetch challenge token
 const getChall = async (accessToken) => {

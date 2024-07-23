@@ -1,233 +1,279 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify'; // Import toast from react-toastify
 import getServices from '../services/getServices';
 import messagesService from '../services/messagesService';
 import noticesService from '../services/noticesService';
+import { toast } from 'react-toastify';
 import { AuthContext } from '../AuthContext';
 
 const Navbar = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [notificationsExist, setNotificationsExist] = useState(false);
-  const [messagesExist, setMessagesExist] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const dropdownRef = useRef(null);
-  const location = useLocation();
-  const navigate = useNavigate(); // Use useNavigate for navigation
-
+  const [activeType, setActiveType] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [services, setServices] = useState([]);
-  const [searchResultsVisible, setSearchResultsVisible] = useState(false);
-  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')); // Parse the string to an object
-  const toastShownRef = useRef(false);
-  const { refreshAccessToken } = useContext(AuthContext);
+  const [filteredServices, setFilteredServices] = useState([]);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [hasNotifications, setHasNotifications] = useState(false);
+  const [hasMessages, setHasMessages] = useState(false);
+  const { logout } = useContext(AuthContext);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    refreshAccessToken()
-    getServices
-      .getAll()
-      .then(response => {
-        setServices(response);
-      })
-      .catch(error => console.log(error));
-
-    
-    noticesService
-      .getAll()
-      .then(notices => {
-        const hasGlobalOrUserNotices = notices.some(notice =>
-          notice.isGlobal || (notice.targetUser && notice.targetUser.id.includes(loggedInUser.id))
-        );
-        setNotificationsExist(hasGlobalOrUserNotices);
-        setNotifications(notices); // Store notices to display in toast
-      })
-      .catch(error => console.log(error));
-
-      messagesService
-      .getAll()
-      .then(messages => {
-        const unreadMessages = messages.filter(message => message.status !== 'read');
-        const hasUnreadMessages = unreadMessages.length > 0;
-        setMessagesExist(hasUnreadMessages);
-
-        // Show toast only if there are unread messages and it has not been shown yet
-        if (!toastShownRef.current && hasUnreadMessages) {
-          toast.info('You have new messages!');
-          toastShownRef.current = true;
-        }
-      })
-      .catch(error => console.log(error));
+    // Initialize logged-in user
+    const user = JSON.parse(localStorage.getItem('loggedInUser'));
+    setLoggedInUser(user);
+    console.log('logged in : ', user);
   }, []);
 
-  useEffect(() => {
-    setIsLoggedIn(!!loggedInUser);
-  }, []);
+  const { data: services, error, isLoading } = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices.getAll,
+    enabled: !!loggedInUser,
+  });
+
+  const { data: messages, error: messagesError, isLoading: messagesLoading } = useQuery({
+    queryKey: ['messages'],
+    queryFn: messagesService.getAll,
+    enabled: !!loggedInUser,
+  });
+
+  const { data: notices, error: noticesError, isLoading: noticesLoading } = useQuery({
+    queryKey: ['notices'],
+    queryFn: noticesService.getAll,
+    enabled: !!loggedInUser,
+  });
+
+  if (isLoading) return <div className='min-h-screen'> <div className="skeleton h-4 w-full"></div>
+  <div className="skeleton h-4 w-full"></div></div>;
+  if (error) return <div>Error fetching services: {error.message}</div>;
+
+  // Extract unique service types and their subtypes
+  const serviceTypes = {};
+  services?.forEach(service => {
+    if (!serviceTypes[service.Type]) {
+      serviceTypes[service.Type] = new Set();
+    }
+    if (service.Subtype) {
+      serviceTypes[service.Type].add(service.Subtype);
+    }
+  });
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchResultsVisible && searchQuery && event.target.closest('.search-container') === null) {
-        setSearchResultsVisible(false);
-      }
-    };
+    if (messages && loggedInUser) {
+      const userMessages = messages.filter(message =>
+        message.targetUser && message.targetUser.id.includes(loggedInUser.id)
+      );
+      setHasMessages(userMessages.length > 0);
+    }
+  }, [messages, loggedInUser]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [searchResultsVisible, searchQuery]);
+  useEffect(() => {
+    if (notices && loggedInUser) {
+      const hasGlobalOrUserNotices = notices.some(notice =>
+        notice.isGlobal || (notice.targetUser && notice.targetUser.id.includes(loggedInUser.id))
+      );
+      setHasNotifications(hasGlobalOrUserNotices);
+    }
+    console.log('not :', notices);
+  }, [notices, loggedInUser]);
 
-  const handleDropdownToggle = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+  const handleTypeClick = (type) => {
+    setActiveType(type === activeType ? null : type);
   };
 
-  const handleSidebarToggle = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+
+    if (!query) {
+      setFilteredServices([]);
+      return;
+    }
+
+    const searchLower = query.toLowerCase();
+    const results = services.filter(service =>
+      service.Name.toLowerCase().includes(searchLower) ||
+      (service.Subtype && service.Subtype.toLowerCase().includes(searchLower))
+    );
+    console.log('Filtered Services:', results);
+    setFilteredServices(results);
+  };
+
+  const handleButtonClick = () => {
+    if (hasMessages) {
+      navigate('/user-messages');
+    } else if (hasNotifications) {
+      notices.forEach(notice => {
+        toast.info(notice.content);
+      });
+      setHasNotifications(false);
+    }
   };
 
   const handleLogout = () => {
-    console.log('Logout clicked');
-    localStorage.removeItem('loggedInUser');
-    setIsLoggedIn(false);
-  };
-
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-    setSearchResultsVisible(true);
-  };
-
-  const filteredServices = services.filter(service =>
-    service.Name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleNotificationsClick = async () => {
-    if (notificationsExist) {
-      console.log(notifications);
-      for (const notice of notifications) {
-        console.log('Notification: ' + notice.content);
-        if (notice.isGlobal || (notice.targetUser && notice.targetUser.id.includes(loggedInUser.id))) {
-          await new Promise((resolve) => {
-            const toastId = toast.info(notice.content, {
-              autoClose: 5000,
-              onClose: resolve,
-            });
-          });
-          await new Promise((resolve) => setTimeout(resolve, 5000)); // Ensures a 5-second wait before the next toast
-        }
-      }
-    }
-  };
-  
-
-  const handleMessagesClick = () => {
-    if (messagesExist) {
-      navigate('/user-messages'); // Use navigate instead of history.push
-    }
+    toast.info('Logged out');
+    logout();
+    setLoggedInUser(null);
   };
 
   return (
-    <nav className="flex items-center justify-between bg-background px-4 sm:px-6 h-16">
-      <div className="flex items-center gap-2">
-        <Link to="/" className="text-lg font-bold">
-          Home
-        </Link>
-        {isLoggedIn && (
-          <Link to="/user-orders">
-            <button
-              className="hidden sm:inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+    <div className="navbar bg-base-100 relative">
+      <div className="navbar-start">
+        {loggedInUser && (<div className="dropdown">
+          <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              Orders
-            </button>
-          </Link>
-        )}
-      </div>
-      {isLoggedIn && (
-        <div className="relative flex-1 max-w-md w-full sm:w-auto mt-2 sm:mt-0">
-          <div className="search-container relative">
-            <input
-              className="flex h-10 border border-input px-3 ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full rounded-md bg-muted pl-8 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-              type="search"
-              placeholder="Search services..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-            {searchResultsVisible && searchQuery && (
-              <div className="absolute mt-1 w-med-full bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                {filteredServices.length > 0 ? (
-                  <ul>
-                    {filteredServices.map(service => (
-                      <li key={service._id} className="px-4 py-2">
-                        <Link
-                          to={`/services/${service._id}`}
-                          className="text-sm text-gray-600 hover:text-gray-800"
-                          onClick={() => setSearchResultsVisible(false)}
-                        >
-                          {service.Name}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h7"
+              />
+            </svg>
+          </div>
+          <ul
+            tabIndex={0}
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+          >
+            {Object.keys(serviceTypes).map((type, index) => (
+              <li
+                key={index}
+                className="relative"
+                onClick={() => handleTypeClick(type)}
+                onTouchEnd={() => handleTypeClick(type)}
+              >
+                <a href="#">{type}</a>
+                {(activeType === type) && (
+                  <ul className="absolute left-0 top-full mt-2 bg-base-100 rounded-box w-52 p-2 shadow">
+                    {Array.from(serviceTypes[type]).map((subtype, subIndex) => (
+                      <li key={subIndex}>
+                        <Link to={`/services/${subtype}`} className="flex items-center">
+                          <span className="bullet mr-2">&#8226;</span>
+                          {subtype}
                         </Link>
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <div className="px-4 py-2 text-sm text-gray-600">
-                    No services found matching "{searchQuery}"
-                  </div>
                 )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      <div className="flex items-center gap-2 mt-2 sm:mt-0">
-        {notificationsExist && isLoggedIn && (
-          <button
-            onClick={handleNotificationsClick}
-            className="hidden sm:inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-          >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-          </button>
-        )}
-        {messagesExist && isLoggedIn && (
-          <button
-            onClick={handleMessagesClick}
-            className="hidden sm:inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-          >
+              </li>
+            ))}
+          </ul>
+        </div>)}
+        <div className="flex-1 flex items-center justify-center">
+          <Link className="text-xl" to="/">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
+              className="h-8 w-8"
               fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-6 h-6"
             >
-              <rect width="16" height="13" x="6" y="4" rx="2"></rect>
-              <path d="m22 7-7.1 3.78c-.57.3-1.23.3-1.8 0L6 7"></path>
-              <path d="M2 8v11c0 1.1.9 2 2 2h14"></path>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
             </svg>
-          </button>
+          </Link>
+        </div>
+      </div>
+      {loggedInUser && (<div className="relative flex-1">
+        <div className="form-control">
+          <input
+            type="text"
+            placeholder="Search"
+            className="input input-bordered w-full md:w-80 lg:w-96"
+            aria-label="Search"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+        </div>
+        {searchQuery && (
+          <ul className="absolute bg-base-100 w-full mt-2 border rounded-lg shadow-lg z-10 top-full left-0">
+            {filteredServices.length > 0 ? (
+              filteredServices.map((service, index) => (
+                <li key={index} className="p-2 hover:bg-gray-200">
+                  <Link
+                    to={service.id ? `/service/${service.id}` : `/services/${service.id}`}
+                    className="flex items-center"
+                  >
+                    <span className="bullet mr-2">&#8226;</span>
+                    {service.Name}
+                  </Link>
+                </li>
+              ))
+            ) : (
+              <li className="p-2">No results found</li>
+            )}
+          </ul>
         )}
-        {isLoggedIn && (
-          <div className="relative">
-            <button
-              className="hidden sm:inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-              onClick={handleDropdownToggle}
+      </div>)}
+      <div className="navbar-end">
+        {(hasNotifications || hasMessages) && (<button className="btn btn-ghost btn-circle hidden md:flex" onClick={handleButtonClick}>
+          <div className="indicator">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+            {hasMessages && (
+        <span className="badge badge-xs badge-primary indicator-item"></span>
+      )}
+          </div>
+        </button>)}
+        {loggedInUser && (<div className="dropdown dropdown-end hidden md:flex">
+          <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
+            <div className="indicator">
               <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              {/* <span className="badge badge-sm indicator-item">7</span> */}
+            </div>
+          </div>
+          <div
+            tabIndex={0}
+            className="card card-compact dropdown-content bg-base-100 z-[1] mt-3 w-52 shadow"
+          >
+            <div className="card-body">
+              {/* <span className="text-lg font-bold">8 Items</span>
+              <span className="text-info">Subtotal: $999</span> */}
+              <Link to="/user-orders">
+              <div className="card-actions">
+                <button className="btn btn-primary btn-block">Orders</button>
+              </div>
+              </Link >
+            </div>
+          </div>
+        </div>)}
+        {loggedInUser ? (<div className="dropdown dropdown-end">
+          <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+            <div className=" rounded-full">
+            <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
                 height="24"
@@ -244,154 +290,30 @@ const Navbar = () => {
                 <path d="M7.69 8a4 4 0 0 1 4.62 0"></path>
                 <line x1="12" y1="14" x2="12" y2="14"></line>
               </svg>
-            </button>
-            {isDropdownOpen && (
-              <div
-                ref={dropdownRef}
-                className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20"
-              >
-                <Link
-                  to="/user-details"
-                  className="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
-                  Account
-                </Link>
-                <button
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                  onClick={() => {
-                    handleLogout();
-                    setIsDropdownOpen(false);
-                  }}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        {!isLoggedIn && (
-          <div className="flex items-center">
-            {location.pathname !== '/register' && (
-              <Link
-                to="/register"
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-              >
-                Register
-              </Link>
-            )}
-            {location.pathname !== '/login' && (
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-              >
-                Login
-              </Link>
-            )}
-          </div>
-        )}
-        <button
-          className="sm:hidden p-2"
-          onClick={handleSidebarToggle}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="w-6 h-6"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-      {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-25 z-40">
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 p-4">
-            <div className="flex justify-between items-center">
-              <Link to="/" className="text-lg font-bold">
-                Home
-              </Link>
-              <button
-                className="p-2"
-                onClick={handleSidebarToggle}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-6 h-6"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+
             </div>
-            {isLoggedIn && (
-              <Link to="/user-orders" className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2">
-                Orders
-              </Link>
-            )}
-            {notificationsExist && isLoggedIn && (
-              <button
-                onClick={handleNotificationsClick}
-                className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
-              >
-                Notifications
-              </button>
-            )}
-            {messagesExist && isLoggedIn &&  (
-              <button
-                onClick={handleMessagesClick}
-                className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
-              >
-                Messages
-              </button>
-            )}
-            {isLoggedIn ? (
-              <>
-                <Link
-                  to="/user-details"
-                  className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  Account
-                </Link>
-                <button
-                  className="block w-full text-left mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
-                  onClick={() => {
-                    handleLogout();
-                    setIsSidebarOpen(false);
-                  }}
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link
-                to="/login"
-                className="block mt-4 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-md px-4 py-2"
-              >
-                Login
-              </Link>
-            )}
           </div>
+          <ul
+            tabIndex={0}
+            className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+          >
+            <li>
+              <Link  to="/user-details">Profile</Link>
+            </li>
+            <li>
+              <button onClick={handleLogout}>Logout</button>
+            </li>
+          </ul>
+        </div>) : (
+        <div className="flex gap-2">
+          {location.pathname !== '/login' && (
+          <Link to="/login" className="btn btn-primary">Login</Link>)}
+          {location.pathname !== '/register' && (
+          <Link to="/register" className="btn btn-secondary">Register</Link>)}
         </div>
       )}
-    </nav>
+      </div>
+    </div>
   );
 };
 
