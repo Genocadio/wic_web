@@ -5,7 +5,9 @@ import getServices from '../services/getServices';
 import messagesService from '../services/messagesService';
 import noticesService from '../services/noticesService';
 import { AuthContext } from '../AuthContext';
-
+import { useQuery } from '@tanstack/react-query';
+import { useDispatch, useSelector } from 'react-redux';
+import { intializeServices } from '../redux/servicesSlice';
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,20 +20,28 @@ const Navbar = () => {
   const navigate = useNavigate(); // Use useNavigate for navigation
   const [activeServiceType, setActiveServiceType] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [services, setServices] = useState([]);
+  // const [services, setServices] = useState([]);
   const [searchResultsVisible, setSearchResultsVisible] = useState(false);
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')); // Parse the string to an object
   const toastShownRef = useRef(false);
   const { refreshAccessToken } = useContext(AuthContext);
 
+  const dispatch = useDispatch();
+  const services = useSelector((state) => state.services);
+  const servicesStatus = useSelector((state) => state.servicesStatus);
+
   useEffect(() => {
     refreshAccessToken()
-    getServices
-      .getAll()
-      .then(response => {
-        setServices(response);
-      })
-      .catch(error => console.log(error));
+    if (services.length === 0) {
+      console.log('Fetching services...');
+      dispatch(intializeServices());
+    }
+    // getServices
+    //   .getAll()
+    //   .then(response => {
+    //     setServices(response);
+    //   })
+    //   .catch(error => console.log(error));
 
     
     noticesService

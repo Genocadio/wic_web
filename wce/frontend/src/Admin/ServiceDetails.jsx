@@ -1,13 +1,53 @@
-// src/components/ServiceDetails.js
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import getServices from '../services/getServices'; // Adjust import path as per your project structure
-import VideoOrYouTubePlayer from '../components/youtubevideo'; // Adjust import path as per your project structure
-import AdminNavbar from './AdminNavbar'
+import { useParams } from 'react-router-dom';
+import getServices from '../services/getServices';
+import VideoOrYouTubePlayer from '../components/youtubevideo';
+import AdminNavbar from './AdminNavbar';
+
+// Subcomponents and functions
+const FormInput = ({ label, name, value, onChange, type = 'text', required = false }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+      required={required}
+    />
+  </div>
+);
+
+const FormTextarea = ({ label, name, value, onChange, required = false }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">{label}</label>
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+      required={required}
+    />
+  </div>
+);
+
+const FormCheckbox = ({ label, name, checked, onChange }) => (
+  <div className="flex items-center">
+    <input
+      id={name}
+      name={name}
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4"
+    />
+    <label htmlFor={name} className="ml-2 block text-sm text-gray-900">{label}</label>
+  </div>
+);
 
 const ServiceDetails = () => {
-  const { id } = useParams(); // Fetch service ID from URL params
-  const navigate = useNavigate();
+  const { id } = useParams();
   const [service, setService] = useState(null);
   const [formData, setFormData] = useState({
     Name: '',
@@ -21,6 +61,8 @@ const ServiceDetails = () => {
     soldInUnits: false,
     price: 0,
     locationRequired: false,
+    colors: [],
+    sizes: [],
   });
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -31,13 +73,13 @@ const ServiceDetails = () => {
 
   const fetchServiceDetails = async () => {
     try {
-      const serviceData = await getServices.getById(id); // Implement getById method in getServices
+      const serviceData = await getServices.getById(id);
       setService(serviceData);
       setFormData({
         Name: serviceData?.Name || '',
         Description: serviceData?.Description || '',
         Type: serviceData?.Type || '',
-        Subtype: serviceData?.Subtype || '', 
+        Subtype: serviceData?.Subtype || '',
         ImageLinks: serviceData?.ImageLinks?.join(', ') || '',
         VideoLinks: serviceData?.VideoLinks?.join(', ') || '',
         showImages: serviceData?.showImages || false,
@@ -45,19 +87,27 @@ const ServiceDetails = () => {
         soldInUnits: serviceData?.soldInUnits || false,
         price: serviceData?.price || 0,
         locationRequired: serviceData?.locationRequired || false,
+        colors: serviceData?.colors || [],
+        sizes: serviceData?.sizes || [],
       });
     } catch (error) {
-      console.error(`Error fetching service details for ID ${id}:`, error);
       setError(error.message || 'Failed to fetch service details');
     }
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    if (name === 'colors' || name === 'sizes') {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value.split(',').map(v => v.trim()),
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -67,18 +117,19 @@ const ServiceDetails = () => {
         ...formData,
         ImageLinks: formData.ImageLinks.split(',').map(link => link.trim()),
         VideoLinks: formData.VideoLinks.split(',').map(link => link.trim()),
+        colors: formData.colors,
+        sizes: formData.sizes,
       });
-      await fetchServiceDetails(); // Refresh the service details after update
+      await fetchServiceDetails();
       setIsEditing(false);
     } catch (error) {
-      console.error(`Error updating service with ID ${id}:`, error);
       setError(error.message || 'Failed to update service');
     }
   };
 
   if (!service) return (
     <>
-    <AdminNavbar />
+      <AdminNavbar />
       <div className="container mx-auto py-4 px-2 min-h-screen sm:px-6 lg:px-24">
         <div className="overflow-x-auto lg:mx-6">
           <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
@@ -103,210 +154,75 @@ const ServiceDetails = () => {
   );
 
   return (
-    <><AdminNavbar /><div className="flex justify-center  min-h-screen">
-      <div className="max-w-xl w-full p-6 bg-white rounded-lg shadow-md mt-16">
-        <h2 className="text-2xl font-bold mb-4 text-center">Service Details</h2>
-        {error && <p className="text-red-500">{error}</p>}
-        {isEditing ? (
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="Name"
-                  value={formData.Name}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea
-                  name="Description"
-                  value={formData.Description}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Type</label>
-                <input
-                  type="text"
-                  name="Type"
-                  value={formData.Type}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required />
-              </div>
-              <div>
-                  <label className="block text-sm font-medium text-gray-700">Subtype</label>
-                  <input
-                    type="text"
-                    name="Subtype"
-                    value={formData.Subtype}
-                    onChange={handleChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+    <>
+      <AdminNavbar />
+      <div className="flex justify-center min-h-screen">
+        <div className="max-w-xl w-full p-6 bg-white rounded-lg shadow-md mt-16">
+          <h2 className="text-2xl font-bold mb-4 text-center">Service Details</h2>
+          {error && <p className="text-red-500">{error}</p>}
+          {isEditing ? (
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 gap-4">
+                <FormInput label="Name" name="Name" value={formData.Name} onChange={handleChange} required />
+                <FormTextarea label="Description" name="Description" value={formData.Description} onChange={handleChange} required />
+                <FormInput label="Type" name="Type" value={formData.Type} onChange={handleChange} required />
+                <FormInput label="Subtype" name="Subtype" value={formData.Subtype} onChange={handleChange} />
+                <FormInput label="Price" name="price" value={formData.price} onChange={handleChange} type="number" required />
+                <FormInput label="Image Links (comma separated)" name="ImageLinks" value={formData.ImageLinks} onChange={handleChange} />
+                <FormInput label="Video Links (comma separated)" name="VideoLinks" value={formData.VideoLinks} onChange={handleChange} />
+                <FormInput label="Colors (comma separated)" name="colors" value={formData.colors.join(', ')} onChange={handleChange} />
+                <FormInput label="Sizes (comma separated)" name="sizes" value={formData.sizes.join(', ')} onChange={handleChange} />
+                <FormCheckbox label="Show Images" name="showImages" checked={formData.showImages} onChange={handleChange} />
+                <FormCheckbox label="Show Videos" name="showVideos" checked={formData.showVideos} onChange={handleChange} />
+                <FormCheckbox label="Sold In Units" name="soldInUnits" checked={formData.soldInUnits} onChange={handleChange} />
+                <FormCheckbox label="Location Required" name="locationRequired" checked={formData.locationRequired} onChange={handleChange} />
+                <div className="mt-4 flex justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 bg-gray-300 rounded-md text-gray-800">
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md">
+                    Save
+                  </button>
                 </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Price</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  required />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Image Links (comma separated)</label>
-                <input
-                  type="text"
-                  name="ImageLinks"
-                  value={formData.ImageLinks}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Video Links (comma separated)</label>
-                <input
-                  type="text"
-                  name="VideoLinks"
-                  value={formData.VideoLinks}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-              </div>
-              <div className="flex items-center">
-                <input
-                  id="showImages"
-                  name="showImages"
-                  type="checkbox"
-                  checked={formData.showImages}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
-                <label htmlFor="showImages" className="ml-2 text-sm text-gray-900">
-                  Show Images
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  id="showVideos"
-                  name="showVideos"
-                  type="checkbox"
-                  checked={formData.showVideos}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
-                <label htmlFor="showVideos" className="ml-2 text-sm text-gray-900">
-                  Show Videos
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  id="soldInUnits"
-                  name="soldInUnits"
-                  type="checkbox"
-                  checked={formData.soldInUnits}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
-                <label htmlFor="soldInUnits" className="ml-2 text-sm text-gray-900">
-                  Sold in Units
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  id="locationRequired"
-                  name="locationRequired"
-                  type="checkbox"
-                  checked={formData.locationRequired}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4" />
-                <label htmlFor="locationRequired" className="ml-2 text-sm text-gray-900">
-                  Location Required
-                </label>
-              </div>
-              <div className="flex justify-end">
+            </form>
+          ) : (
+            <div>
+              <div className="mb-4"><strong>Name:</strong> {formData.Name}</div>
+              <div className="mb-4"><strong>Description:</strong> {formData.Description}</div>
+              <div className="mb-4"><strong>Type:</strong> {formData.Type}</div>
+              <div className="mb-4"><strong>Subtype:</strong> {formData.Subtype}</div>
+              <div className="mb-4"><strong>Price:</strong> ${formData.price}</div>
+              <div className="mb-4"><strong>Image Links:</strong> {formData.ImageLinks}</div>
+              <div className="mb-4"><strong>Video Links:</strong> {formData.VideoLinks}</div>
+              <div className="mb-4"><strong>Colors:</strong> {formData.colors.join(', ')}</div>
+              <div className="mb-4"><strong>Sizes:</strong> {formData.sizes.join(', ')}</div>
+              <div className="mb-4"><strong>Show Images:</strong> {formData.showImages ? 'Yes' : 'No'}</div>
+              <div className="mb-4"><strong>Show Videos:</strong> {formData.showVideos ? 'Yes' : 'No'}</div>
+              <div className="mb-4"><strong>Sold In Units:</strong> {formData.soldInUnits ? 'Yes' : 'No'}</div>
+              <div className="mb-4"><strong>Location Required:</strong> {formData.locationRequired ? 'Yes' : 'No'}</div>
+              <div className="mt-4 flex justify-between">
                 <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md mr-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
-                >
-                  Save
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md">
+                  Edit
                 </button>
               </div>
             </div>
-          </form>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
-              <div className="mt-1 text-lg font-bold">{formData.Name}</div>
+          )}
+          {formData.VideoLinks && formData.VideoLinks.split(',').map((link, index) => (
+            <div key={index} className="mt-4">
+              <VideoOrYouTubePlayer url={link.trim()} />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
-              <div className="mt-1">{formData.Description}</div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Type</label>
-              <div className="mt-1">{formData.Type}</div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">SubType</label>
-              <div className="mt-1">{formData.Subtype}</div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Price</label>
-              <div className="mt-1">{formData.price}Rwf</div>
-            </div>
-            {formData.ImageLinks && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Image Links</label>
-                <div className="mt-1 flex flex-wrap">
-                  {formData.ImageLinks.split(',').map((link, index) => (
-                    <img
-                      key={index}
-                      src={link.trim()}
-                      alt={`Service Image ${index + 1}`}
-                      className="w-20 h-20 object-cover mr-2 mb-2 rounded-lg" />
-                  ))}
-                </div>
-              </div>
-            )}
-            {formData.VideoLinks && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Video Links</label>
-                <div className="mt-1">
-                  {formData.VideoLinks.split(',').map((link, index) => (
-                    <VideoOrYouTubePlayer key={index} link={link.trim()} />
-                  ))}
-                </div>
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Sold in Units</label>
-              <div className="mt-1">{formData.soldInUnits ? 'Yes' : 'No'}</div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Location Required</label>
-              <div className="mt-1">{formData.locationRequired ? 'Yes' : 'No'}</div>
-            </div>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
-              >
-                Edit Service
-              </button>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
-    </div></>
+    </>
   );
 };
 

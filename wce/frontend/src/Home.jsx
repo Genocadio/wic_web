@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import getServices from './services/getServices';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { intializeServices } from './redux/servicesSlice';
 import { Link } from 'react-router-dom';
 import Navbar from './User/Navbar';
 import 'daisyui/dist/full.css'; // Import DaisyUI full CSS
 
-const fetchServices = async () => {
-  const response = await getServices.getAll();
-  return response;
-};
-
 const Home = () => {
-  const { data: services = [], isLoading, error } = useQuery({
-    queryKey: ['services'],
-    queryFn: fetchServices,
-  });
+  const dispatch = useDispatch();
+  const services = useSelector((state) => state.services); // Get services from Redux store
   const [activeType, setActiveType] = useState(null);
 
-  if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-52 flex flex-col gap-4">
-        <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
-        <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+  // Initialize services when component mounts
+  useEffect(() => {
+    dispatch(intializeServices());
+  }, [dispatch]);
+
+  // Ensure services are loaded before rendering
+  if (!services.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-52 flex flex-col gap-4">
+          <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+          <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+        </div>
       </div>
-    </div>
-  );
-  if (error) return <div>Error fetching services: {error.message}</div>;
+    );
+  }
 
   // Function to handle click on service type button
   const handleClick = (type) => {

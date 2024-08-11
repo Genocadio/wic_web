@@ -7,8 +7,8 @@ const Oderrouter = express.Router();
 
 // POST /api/orders - Create a new order
 Oderrouter.post('/', async (req, res, next) => {
-  const { serviceId, quantity, notes, location, paymentMethod } = req.body;
-  console.log(req.user)
+  const { serviceId, quantity, notes, location, paymentMethod, color, size } = req.body;
+  console.log(req.user);
 
   try {
     // Check if serviceId is a valid ObjectId before querying
@@ -41,21 +41,24 @@ Oderrouter.post('/', async (req, res, next) => {
       totalPrice,
       notes, // Include notes in the new order
       status: 'processing', // Default status to 'processing'
-      location: location,
+      location,
       user: req.user.id, // Associate order with the authenticated user
-      paymentMethod: paymentMethod // Use the user's paymentMethod
+      paymentMethod, // Use the user's paymentMethod
+      color, // Include color in the new order
+      size // Include size in the new order
     });
 
     // Save the new order to the database
     const savedOrder = await newOrder.save();
-    console.log('savedOrder', savedOrder)
+    console.log('savedOrder', savedOrder);
     req.user.orders = req.user.orders.concat(savedOrder._id);
+    await req.user.save();
     res.status(201).json(savedOrder);
-    await req.user.save()
   } catch (error) {
     next(error);
   }
 });
+
 // GET /api/orders - Retrieve all orders
 Oderrouter.get('/', async (req, res, next) => {
   try {
@@ -71,11 +74,10 @@ Oderrouter.get('/', async (req, res, next) => {
   }
 });
 
-
 // GET /api/orders/:id - Retrieve a specific order by ID
 Oderrouter.get('/:id', async (req, res, next) => {
   const { id } = req.params;
-  if (!req.user ) {
+  if (!req.user) {
     return res.status(403).json({ error: 'Access denied. Admins only.' });
   }
 
@@ -86,7 +88,7 @@ Oderrouter.get('/:id', async (req, res, next) => {
     }
 
     // Check if the authenticated user is an admin or the creator of the order
-    if (req.user && req.user.userType === 'admin' || order.user._id.toString() === req.user._id.toString()) {
+    if (req.user && (req.user.userType === 'admin' || order.user._id.toString() === req.user._id.toString())) {
       res.json(order);
     } else {
       return res.status(403).json({ error: 'Access denied. Admins or order creator only.' });
@@ -94,12 +96,12 @@ Oderrouter.get('/:id', async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-})
+});
 
 // PUT /api/orders/:id - Update an order by ID
-Oderrouter.put('/:id',  async (req, res, next) => {
+Oderrouter.put('/:id', async (req, res, next) => {
   const { id } = req.params;
-  const { quantity, notes, status, paymentMethod, serviceName  } = req.body;
+  const { quantity, notes, status, paymentMethod, serviceName, color, size } = req.body;
 
   try {
     const order = await Order.findById(id);
@@ -114,7 +116,9 @@ Oderrouter.put('/:id',  async (req, res, next) => {
       order.notes = notes || order.notes;
       order.serviceName = serviceName || order.serviceName; // Update serviceName if provided
       order.status = status || order.status; // Update status if provided
-      Order.paymentMethod = paymentMethod || order.paymentMethod;
+      order.paymentMethod = paymentMethod || order.paymentMethod;
+      order.color = color || order.color; // Update color if provided
+      order.size = size || order.size; // Update size if provided
 
       // Calculate updated totalPrice if quantity changes
       if (quantity) {
@@ -135,8 +139,8 @@ Oderrouter.put('/:id',  async (req, res, next) => {
   }
 });
 
-// Delete an order by ID - Accessible only to admin users
-Oderrouter.delete('/:id',  async (req, res, next) => {
+// DELETE /api/orders/:id - Delete an order by ID
+Oderrouter.delete('/:id', async (req, res, next) => {
   const { id } = req.params;
 
   try {

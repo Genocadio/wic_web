@@ -1,7 +1,7 @@
 // src/services/noticesService.js
 import axios from 'axios';
 
-const baseUrl = '/api/notices';
+const baseUrl = 'http://localhost:3001/api/notices';
 
 let token = null;
 

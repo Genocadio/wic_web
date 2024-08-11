@@ -1,52 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import Navbar from './User/Navbar';
-import getServices from './services/getServices';
 import Getorders from './services/Getorders';
 import { toast } from 'react-toastify';
+import { useSelector, useDispatch } from 'react-redux';
+import { intializeServices } from './redux/servicesSlice';
 import 'daisyui/dist/full.css';
 
 // Function to fetch the service by ID
-const fetchService = async (id) => {
-  const serviceData = await getServices.getById(id);
-  return serviceData;
+const fetchService = async (id, services, dispatch) => {
+  let service = services.find((s) => s.id === id);
+  if (!service) {
+    console.log('missing');
+    const serviceData = await getServices.getById(id);
+    dispatch(intializeServices([serviceData]));
+    service = serviceData;
+  }
+  return service;
 };
 
 // Function to create an order
 const createOrder = async (newOrder) => {
-  // Retrieve token from localStorage
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
   const token = loggedInUser.token;
-
-  // Set token in orderServices module
   Getorders.setToken(token);
-
-  // Call the create function from orderServices to post the order
   await Getorders.create(newOrder);
 };
 
 const OrderPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [quantity, setQuantity] = useState(1);
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('MOMO');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(''); // State for selected color
+  const [selectedSize, setSelectedSize] = useState(''); // State for selected size
+  const [showOverlay, setShowOverlay] = useState(false);
 
-  // Fetch the service details using useQuery
+  const servicess = useSelector((state) => state.services);
+  useEffect(() => {
+    if (servicess.length === 0) {
+      console.log('Fetching services...');
+      dispatch(intializeServices());
+    }
+  }, [dispatch]);
+
+  const services = useSelector((state) => state.services);
   const { data: service, error, isLoading } = useQuery({
     queryKey: ['service', id],
-    queryFn: () => fetchService(id),
+    queryFn: () => fetchService(id, services, dispatch),
+    initialData: services.find((s) => s.id === id),
   });
 
-  // Mutation to place the order using useMutation
   const mutation = useMutation({
     mutationFn: createOrder,
     onSuccess: () => {
       toast.success('Order placed successfully!');
-      // navigate('/oders');
+      setShowOverlay(true);
+      // navigate('/orders');
     },
     onError: (error) => {
       console.error('Error placing order:', error);
@@ -60,7 +75,10 @@ const OrderPage = () => {
       setIsPlacingOrder(false);
     }
   });
-
+  const isValidArray = (arr) => {
+    console.log('arr', arr);
+    return Array.isArray(arr) && arr.length > 0 && arr.some(item => item !== null && item !== undefined && item !== '');
+  };
   const handlePlaceOrder = () => {
     setIsPlacingOrder(true);
     const totalPrice = service.price * quantity;
@@ -71,14 +89,27 @@ const OrderPage = () => {
       totalPrice,
       location,
       notes,
-      paymentMethod
+      paymentMethod,
+      color: selectedColor, // Add selected color to the order
+      size: selectedSize, // Add selected size to the order
     };
 
     mutation.mutate(newOrder);
   };
+  const handleOverlayClose = () => {
+    setShowOverlay(false);
+    // navigate('/orders'); // Redirect or perform any other action after closing overlay
+  };
 
   if (isLoading) {
-    return <p className="text-center min-h-screen text-lg">Loading...</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-52 flex flex-col gap-4">
+          <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+          <div className="skeleton h-4 w-full bg-gray-200 animate-pulse rounded"></div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -119,6 +150,40 @@ const OrderPage = () => {
                         value={quantity}
                         onChange={(e) => setQuantity(Number(e.target.value))}
                       />
+                    </div>
+                  )}
+                  {isValidArray(service.colors) > 0 && (
+                    <div className="form-control">
+                      <label className="label">Select Color</label>
+                      <select
+                        className="select select-bordered"
+                        value={selectedColor}
+                        onChange={(e) => setSelectedColor(e.target.value)}
+                      >
+                        <option value="" disabled>Select a color</option>
+                        {service.colors.map((color) => (
+                          <option key={color} value={color}>
+                            {color}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  { isValidArray(service.sizes) && (
+                    <div className="form-control">
+                      <label className="label">Select Size</label>
+                      <select
+                        className="select select-bordered"
+                        value={selectedSize}
+                        onChange={(e) => setSelectedSize(e.target.value)}
+                      >
+                        <option value="" disabled>Select a size</option>
+                        {service.sizes.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   )}
                   {service.locationRequired && (
@@ -172,6 +237,20 @@ const OrderPage = () => {
           )}
         </div>
       </div>
+      {showOverlay && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg w-80 text-center">
+            <h2 className="text-xl font-bold mb-4">Order Successful!</h2>
+            <p className="mb-4">Your order has been placed successfully. Please proceed with payment using {paymentMethod}.</p>
+            <button
+              className="btn btn-primary"
+              onClick={handleOverlayClose}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

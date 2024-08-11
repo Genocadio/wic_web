@@ -9,7 +9,7 @@ const AddService = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('');
-  const [subtype, setSubtype] = useState(''); // New state for subtype
+  const [subtype, setSubtype] = useState(''); 
   const [imageLinks, setImageLinks] = useState('');
   const [videoLinks, setVideoLinks] = useState('');
   const [showImages, setShowImages] = useState(false);
@@ -17,7 +17,25 @@ const AddService = () => {
   const [soldInUnits, setSoldInUnits] = useState(false);
   const [price, setPrice] = useState('');
   const [locationRequired, setLocationRequired] = useState(false);
+  const [colors, setColors] = useState([]);  // New state for colors array
+  const [sizes, setSizes] = useState([]);    // New state for sizes array
+  const [colorInput, setColorInput] = useState('');  // Input field for color
+  const [sizeInput, setSizeInput] = useState('');    // Input field for size
   const [error, setError] = useState(null);
+
+  const handleAddColor = () => {
+    if (colorInput.trim() !== '') {
+      setColors([...colors, colorInput.trim()]);
+      setColorInput('');
+    }
+  };
+
+  const handleAddSize = () => {
+    if (sizeInput.trim() !== '') {
+      setSizes([...sizes, sizeInput.trim()]);
+      setSizeInput('');
+    }
+  };
 
   const handleAddService = async (e) => {
     e.preventDefault();
@@ -26,26 +44,27 @@ const AddService = () => {
         Name: name.trim(),
         Description: description.trim(),
         Type: type.trim(),
-        Subtype: subtype.trim(), // Include subtype
+        Subtype: subtype.trim(),
         ImageLinks: imageLinks.split(',').map(link => link.trim()),
         VideoLinks: videoLinks.split(',').map(link => link.trim()),
         showImages: showImages,
         showVideos: showVideos,
         soldInUnits: soldInUnits,
-        price: parseFloat(price), // Convert to number
+        price: parseFloat(price),
         locationRequired: locationRequired,
+        colors: colors,  // Add colors array
+        sizes: sizes,    // Add sizes array
       };
 
       await getService.create(newService);
 
-      // Show success toast
       toast.success('Service added successfully');
 
-      // Reset form fields after successful addition
+      // Reset form fields
       setName('');
       setDescription('');
       setType('');
-      setSubtype(''); // Reset subtype
+      setSubtype('');
       setImageLinks('');
       setVideoLinks('');
       setShowImages(false);
@@ -53,6 +72,8 @@ const AddService = () => {
       setSoldInUnits(false);
       setPrice('');
       setLocationRequired(false);
+      setColors([]);  // Reset colors array
+      setSizes([]);   // Reset sizes array
       setError(null);
 
       // Redirect to services list page or dashboard
@@ -139,6 +160,53 @@ const AddService = () => {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
             />
+
+            {/* Color input with add button */}
+            <div className="flex items-center">
+              <input
+                type="text"
+                className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+                placeholder="Enter color"
+                value={colorInput}
+                onChange={(e) => setColorInput(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleAddColor}
+                className="ml-2 rounded-lg bg-green-500 px-4 py-2 text-white"
+              >
+                Add Color
+              </button>
+            </div>
+
+            {/* Display added colors */}
+            <div>
+              <p>Colors: {colors.join(', ')}</p>
+            </div>
+
+            {/* Size input with add button */}
+            <div className="flex items-center">
+              <input
+                type="text"
+                className="w-full rounded-lg border-gray-200 p-4 pe-12 text-sm shadow-sm"
+                placeholder="Enter size"
+                value={sizeInput}
+                onChange={(e) => setSizeInput(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleAddSize}
+                className="ml-2 rounded-lg bg-green-500 px-4 py-2 text-white"
+              >
+                Add Size
+              </button>
+            </div>
+
+            {/* Display added sizes */}
+            <div>
+              <p>Sizes: {sizes.join(', ')}</p>
+            </div>
+
             <div className="flex items-center">
               <label htmlFor="showImages" className="mr-2 text-gray-800">Show Images</label>
               <input
@@ -179,16 +247,17 @@ const AddService = () => {
                 className="rounded border-gray-300 text-blue-500 focus:ring-blue-500 h-4 w-4"
               />
             </div>
+
+            <button
+              type="submit"
+              className="block w-full rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white"
+            >
+              Add Service
+            </button>
           </div>
-          <button
-            type="submit"
-            className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
-            Add Service
-          </button>
         </form>
+        <ToastContainer />
       </div>
-      <ToastContainer />
     </>
   );
 };

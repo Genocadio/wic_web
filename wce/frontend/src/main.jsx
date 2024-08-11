@@ -29,6 +29,8 @@ import AdminMessagesPage from './Admin/AdminMessagesPage.jsx';
 import UserMessagesPage from './User/UserMessagesPage.jsx';
 import DataExportPage from './Admin/DataExportPage.jsx';
 import ServicesBySubtype from './User/Servicesubtype.jsx';
+import { Provider } from 'react-redux';
+import store from './redux/store.js';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient();
@@ -119,12 +121,16 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
+      
         <RouterProvider router={router} />
         <ToastContainer position="top-center" autoClose={3000} />
         <ReactQueryDevtools initialIsOpen={false} /> {/* Add React Query Devtools */}
-      </QueryClientProvider>
+      
     </AuthProvider>
+    </QueryClientProvider>
+    </Provider>
   </React.StrictMode>,
 );

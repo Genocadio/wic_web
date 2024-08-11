@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseUrl = '/api'; // Base URL for API
+const baseUrl = 'http://localhost:3001/api'; // Base URL for API
 
 const login = async (credentials) => {
   try {

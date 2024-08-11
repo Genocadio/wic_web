@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const orderSchema = new mongoose.Schema({
   service: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Service', // Reference to the Service model
+    ref: 'Service',
     required: true
   },
   serviceName: {
@@ -23,26 +23,29 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    default: 'place' // Default status is 'place'
+    default: 'place'
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User' // Reference to the User model
+    ref: 'User'
   },
   location: {
     type: String
-  // Assuming location is required for the order
   },
   orderDate: {
     type: Date,
-    default: Date.now // Default to current date/time
+    default: Date.now
   },
   paymentMethod: {
     type: String,
-    defaul: 'MOMO'
+    default: 'MOMO'
   },
-
-  // Add other order properties as needed
+  color: {
+    type: String,  // Added color field
+  },
+  size: {
+    type: String,  // Added size field
+  }
 });
 
 orderSchema.set('toJSON', {

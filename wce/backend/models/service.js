@@ -12,7 +12,9 @@ const serviceSchema = new mongoose.Schema({
   soldInUnits: { type: Boolean, default: false },
   price: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
-  locationRequired: { type: Boolean, default: false }
+  locationRequired: { type: Boolean, default: false },
+  colors: [{ type: String }],  // Array of colors available for the service
+  sizes: [{ type: String }],   // Array of sizes available for the service
 });
 
 serviceSchema.set('toJSON', {

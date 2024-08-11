@@ -116,13 +116,15 @@ const OrderDetailsPage = () => {
               <h2 className="text-2xl font-semibold">Order Information</h2>
               <p><strong>Order Date:</strong> {format(new Date(order.orderDate), 'yyyy-MM-dd HH:mm')}</p>
               <p><strong>Service Name:</strong> {order.service.Name}</p>
-              <p><strong>notes:</strong> {order.notes || 'Notes not available'}</p>
+              <p><strong>Notes:</strong> {order.notes || 'Notes not available'}</p>
               <p><strong>Location:</strong> {order.location || 'Not provided'}</p>
               <p><strong>Service Type:</strong> {order.service.Type}</p>
               <p><strong>User Email:</strong> {order.user.email}</p>
               <p><strong>Quantity:</strong> {order.quantity}</p>
               <p><strong>Total Price:</strong> {order.totalPrice.toFixed(2)} Rwf</p>
               <p><strong>Status:</strong> {order.status}</p>
+              <p><strong>Color:</strong> {order.color || 'Not specified'}</p> {/* Show color */}
+              <p><strong>Size:</strong> {order.size || 'Not specified'}</p> {/* Show size */}
             </div>
             <div className="flex space-x-4">
               <button

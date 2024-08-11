@@ -3,6 +3,7 @@ const express = require('express');
 const Service = require('../models/service');
 const Servicerouter = express.Router();
 const mongoose = require('mongoose');
+
 // Define routes for Service model
 Servicerouter.get('/', async (request, response) => {
     const services = await Service.find({});
@@ -27,7 +28,9 @@ Servicerouter.post('/', async (request, response) => {
       showVideos: body.showVideos || false,
       soldInUnits: body.soldInUnits || false,
       locationRequired: body.locationRequired || false,
-      price: body.price || 0
+      price: body.price || 0,
+      colors: body.colors || [],  // Added colors field
+      sizes: body.sizes || []     // Added sizes field
     });
   
     const savedService = await newService.save();
@@ -61,7 +64,9 @@ Servicerouter.put('/:id', async (request, response) => {
       showVideos: body.showVideos,
       soldInUnits: body.soldInUnits,
       locationRequired: body.locationRequired,
-      price: body.price
+      price: body.price,
+      colors: body.colors,  // Added colors field
+      sizes: body.sizes     // Added sizes field
     };
   
     try {
